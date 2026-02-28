@@ -1,0 +1,6 @@
+# Cloudflare Pages ignore file
+# Ігноруємо worker файли для деплою статичного сайту
+
+src/worker.ts
+wrangler.toml
+.wrangler/

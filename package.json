@@ -7,13 +7,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:pages": "vite build",
     "predeploy": "npm run build",
     "deploy": "cross-env GH_PAGES=1 npm run build && gh-pages -d dist",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "deploy:worker": "wrangler deploy"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20260305.0",

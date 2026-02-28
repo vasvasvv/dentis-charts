@@ -11,7 +11,8 @@ target/
 .env.local
 .env.*
 .dev.vars
-wrangler.toml
+# wrangler.toml # Розкоментуйте якщо хочете ігнорувати
+.wrangler/
 
 # IDE files
 .vscode/
