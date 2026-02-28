@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { sign, verify } from 'hono/jwt'
+import { sign, verify } from 'hono/utils/jwt/jwt'
 
 // Simple non-crypto hash (same as original – do NOT change or existing passwords break)
 function simpleHash(str: string): string {
