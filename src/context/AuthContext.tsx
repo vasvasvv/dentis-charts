@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { User, UserRole } from '@/types/dental';
+import { api } from '@/lib/api';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -9,7 +10,6 @@ interface AuthContextType {
   canPerformAction: (action: 'add' | 'edit' | 'delete', resource: 'patient' | 'dental' | 'user') => boolean;
 }
 
-const API_URL = 'https://dentis-charts.pages.dev';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('dental_token'));
 
   useEffect(() => {
-    // Check if token is valid (could add verify call here)
     if (!token) {
       setCurrentUser(null);
     }
@@ -28,20 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Помилка авторизації' };
-      }
+      const data = await api.login(email, password);
 
       if (!data.token || !data.user) {
         return { success: false, error: 'Сервер повернув некоректні дані' };
@@ -61,9 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('dental_user', JSON.stringify(user));
       
       return { success: true };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      return { success: false, error: 'Сервер недоступний або сталася помилка мережі' };
+      return { success: false, error: err.message || 'Сервер недоступний або сталася помилка мережі' };
     }
   }, []);
 

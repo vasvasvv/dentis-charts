@@ -25,12 +25,18 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 // CORS configuration
 app.use('*', cors({
-  origin: [
-    'https://dentis-charts.pages.dev',
-    'https://dentis-clinic.pp.ua',  // Ваш custom домен
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
+  origin: (origin) => {
+    // Allow all origins in development, specific ones in production
+    const allowedOrigins = [
+      'https://dentis-charts.pages.dev',
+      'https://dentis-clinic.pp.ua',
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:8080'
+    ];
+    // Return the origin if it's allowed, or the first allowed origin
+    return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
