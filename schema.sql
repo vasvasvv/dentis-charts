@@ -42,6 +42,7 @@ CREATE TABLE visits (
   patient_id INTEGER NOT NULL,
   doctor_id INTEGER NOT NULL,
   visitDate TEXT NOT NULL,
+  type TEXT DEFAULT 'future' CHECK(type IN ('past', 'future')),
   reason TEXT,
   notes TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

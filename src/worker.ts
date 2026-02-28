@@ -66,8 +66,63 @@ app.post('/api/auth/login', async (c) => {
 // --- PATIENT ROUTES ---
 app.get('/api/patients', authMiddleware, async (c) => {
   try {
-    const { results } = await c.env.DB.prepare('SELECT * FROM patients').all();
-    return c.json(results || []);
+    const { results: patients } = await c.env.DB.prepare('SELECT * FROM patients').all();
+    
+    // Fetch visits and tooth data for each patient
+    const patientsWithDetails = await Promise.all((patients || []).map(async (patient: any) => {
+      const { results: visits } = await c.env.DB.prepare(
+        'SELECT v.*, u.fullName as doctorName FROM visits v JOIN users u ON v.doctor_id = u.id WHERE v.patient_id = ? ORDER BY v.visitDate DESC'
+      ).bind(patient.id).all();
+      
+      const { results: teethData } = await c.env.DB.prepare(
+        'SELECT * FROM tooth_data WHERE patient_id = ?'
+      ).bind(patient.id).all();
+      
+      return {
+        ...patient,
+        visits: visits || [],
+        dentalChart: (teethData || []).map((t: any) => ({
+          toothNumber: t.tooth_number,
+          status: t.status,
+          notes: t.notes,
+          updatedAt: t.updated_at
+        }))
+      };
+    }));
+    
+    return c.json(patientsWithDetails);
+  } catch (error: any) {
+    return c.json({ error: 'Database error', details: error.message }, 500);
+  }
+});
+
+app.get('/api/patients/:id', authMiddleware, async (c) => {
+  try {
+    const patientId = c.req.param('id');
+    const patient = await c.env.DB.prepare('SELECT * FROM patients WHERE id = ?').bind(patientId).first();
+    
+    if (!patient) {
+      return c.json({ error: 'Patient not found' }, 404);
+    }
+    
+    const { results: visits } = await c.env.DB.prepare(
+      'SELECT v.*, u.fullName as doctorName FROM visits v JOIN users u ON v.doctor_id = u.id WHERE v.patient_id = ? ORDER BY v.visitDate DESC'
+    ).bind(patientId).all();
+    
+    const { results: teethData } = await c.env.DB.prepare(
+      'SELECT * FROM tooth_data WHERE patient_id = ?'
+    ).bind(patientId).all();
+    
+    return c.json({
+      ...patient,
+      visits: visits || [],
+      dentalChart: (teethData || []).map((t: any) => ({
+        toothNumber: t.tooth_number,
+        status: t.status,
+        notes: t.notes,
+        updatedAt: t.updated_at
+      }))
+    });
   } catch (error: any) {
     return c.json({ error: 'Database error', details: error.message }, 500);
   }
@@ -166,10 +221,41 @@ app.post('/api/patients/:id/teeth', authMiddleware, async (c) => {
 // --- VISITS ---
 app.get('/api/patients/:id/visits', authMiddleware, async (c) => {
   const patientId = c.req.param('id');
-  const { results } = await c.env.DB.prepare('SELECT v.*, u.fullName as doctorName FROM visits v JOIN users u ON v.doctor_id = u.id WHERE patient_id = ?')
+  const { results } = await c.env.DB.prepare('SELECT v.*, u.fullName as doctorName FROM visits v JOIN users u ON v.doctor_id = u.id WHERE patient_id = ? ORDER BY v.visitDate DESC')
     .bind(patientId)
     .all();
   return c.json(results);
+});
+
+app.post('/api/patients/:id/visits', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const patientId = c.req.param('id');
+  const { visitDate, type, reason, notes, doctorId } = await c.req.json();
+
+  const result = await c.env.DB.prepare(
+    'INSERT INTO visits (patient_id, doctor_id, visitDate, type, reason, notes) VALUES (?, ?, ?, ?, ?, ?) RETURNING *'
+  ).bind(patientId, doctorId, visitDate, type || 'future', reason || null, notes || null).first();
+
+  await c.env.DB.prepare(
+    'INSERT INTO history_logs (entity_type, entity_id, action, changed_by) VALUES (?, ?, ?, ?)'
+  ).bind('visit', result.id, 'create', user.id).run();
+
+  return c.json(result);
+});
+
+app.delete('/api/patients/:patientId/visits/:visitId', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const { patientId, visitId } = c.req.param();
+
+  await c.env.DB.prepare('DELETE FROM visits WHERE id = ? AND patient_id = ?')
+    .bind(visitId, patientId)
+    .run();
+
+  await c.env.DB.prepare(
+    'INSERT INTO history_logs (entity_type, entity_id, action, changed_by) VALUES (?, ?, ?, ?)'
+  ).bind('visit', visitId, 'delete', user.id).run();
+
+  return c.json({ success: true });
 });
 
 // --- DOCTOR ROUTES ---

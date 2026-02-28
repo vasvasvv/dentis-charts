@@ -13,8 +13,8 @@ interface ClinicContextType {
   addPatient: (patient: any) => Promise<void>;
   updatePatient: (patientId: string, patient: any) => Promise<void>;
   deletePatient: (patientId: string) => Promise<void>;
-  addVisit: (patientId: string, visit: any) => void;
-  deleteVisit: (patientId: string, visitId: string) => void;
+  addVisit: (patientId: string, visit: any) => Promise<void>;
+  deleteVisit: (patientId: string, visitId: string) => Promise<void>;
   updateToothRecord: (patientId: string, toothNumber: number, record: Partial<ToothRecord>) => Promise<void>;
   getPatients: () => Promise<void>;
   getPatientDetails: (id: string) => Promise<void>;
@@ -154,47 +154,54 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const addVisit = useCallback((patientId: string, visit: any) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          visits: [
-            {
-              id: Date.now().toString(),
-              ...visit
-            },
-            ...p.visits
-          ]
-        };
-      }
-      return p;
-    }));
-  }, []);
+  const addVisit = useCallback(async (patientId: string, visit: any) => {
+    if (!token) return;
+    try {
+      await fetch(`${API_URL}/api/patients/${patientId}/visits`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(visit)
+      });
+      await getPatients(); // Refresh patient list to get updated visits
+    } catch (error) {
+      console.error('Add visit error:', error);
+    }
+  }, [token, getPatients]);
 
-  const deleteVisit = useCallback((patientId: string, visitId: string) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          visits: p.visits.filter(v => v.id !== visitId)
-        };
-      }
-      return p;
-    }));
-  }, []);
+  const deleteVisit = useCallback(async (patientId: string, visitId: string) => {
+    if (!token) return;
+    try {
+      await fetch(`${API_URL}/api/patients/${patientId}/visits/${visitId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      await getPatients(); // Refresh patient list to get updated visits
+    } catch (error) {
+      console.error('Delete visit error:', error);
+    }
+  }, [token, getPatients]);
 
   const updateToothRecord = useCallback(async (patientId: string, toothNumber: number, record: any) => {
     if (!token) return;
-    await fetch(`${API_URL}/api/patients/${patientId}/teeth`, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ tooth_number: toothNumber, ...record })
-    });
-  }, [token]);
+    try {
+      await fetch(`${API_URL}/api/patients/${patientId}/teeth`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tooth_number: toothNumber, ...record })
+      });
+      await getPatients(); // Refresh to get updated dental chart
+    } catch (error) {
+      console.error('Update tooth record error:', error);
+    }
+  }, [token, getPatients]);
 
   return (
     <ClinicContext.Provider value={{
