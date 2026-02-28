@@ -2,7 +2,7 @@
 // Change this URL when deploying to a different environment
 
 const API_URLS = {
-  production: 'https://dentis-cards-api.nesterenkovasil9.workers.dev/',
+  production: 'https://dentis-cards-api.nesterenkovasil9.workers.dev',
   development: 'http://localhost:8787', // wrangler dev
 } as const;
 
