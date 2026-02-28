@@ -37,23 +37,23 @@ return (
               via-[hsl(38,30%,95%)] 
               to-[hsl(36,28%,93%)] p-4 relative overflow-hidden">
 
-      {/* ─── Фонова картинка 400×400 по центру, напівпрозора ─── */}
-      <div
-        className="
-          absolute inset-0 
-          flex items-center justify-center pointer-events-none
-        "
-      >
-        <div
-          className="
-            w-[400px] h-[400px] 
-            bg-[url('/src/assets/favicon.png')]   
-            bg-no-repeat bg-center bg-contain     
-            opacity-70                           
-            transition-opacity duration-700
-          "
-        />
-      </div>
+                         {/* ─── Фонова картинка 400×400 по центру, напівпрозора ─── */}
+            <div
+              className="
+                absolute inset-0 
+                flex items-center justify-center pointer-events-none
+              "
+            >
+              <div
+                className="
+                  w-[400px] h-[400px] 
+                  bg-[url('src/assets/favicon.png')]   
+                  bg-no-repeat bg-center bg-contain     
+                  opacity-10                           
+                  transition-opacity duration-700
+                "
+              />
+            </div>
 
       {/* ─── Основний контент (форма) ─── */}
       <div className="w-full max-w-md animate-fade-in  
@@ -69,6 +69,8 @@ return (
               overflow-hidden
               relativ
               z-10">
+
+
         {/* Logo */}
         <div className="text-center mb-8">
          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent overflow-hidden shadow-lg mb-4 mt-10">
