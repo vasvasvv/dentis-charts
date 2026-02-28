@@ -22,7 +22,7 @@ interface ClinicContextType {
   addHistoryEntry: (patientId: string, entry: any) => void;
 }
 
-const API_URL = 'https://dentis-api.nesterenkovasil9.workers.dev';
+const API_URL = 'https://YOUR_CLOUDFLARE_WORKER_SUBDOMAIN.YOUR_NAMESPACE.workers.dev';
 const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
 
 export function ClinicProvider({ children }: { children: React.ReactNode }) {

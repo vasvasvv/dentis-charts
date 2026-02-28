@@ -2,7 +2,7 @@ name = "dentis-cards-api"
 main = "src/worker.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
-account_id = "a22d80896b0eccc01b40478bc64c9849"
+account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
 workers_dev = true
 
 [build]
@@ -15,7 +15,7 @@ main = "./src/worker.ts"
 [[d1_databases]]
 binding = "DB"
 database_name = "dentis-charts"
-database_id = "b48cc22c-3812-4648-9be5-71a9eae1458c"
+database_id = "YOUR_D1_DATABASE_ID"
 
 [vars]
 JWT_SECRET = "your-secret-key-here-change-in-production"
