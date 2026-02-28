@@ -1,22 +1,19 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { jwt, sign, verify } from 'hono/jwt';
+import { sign, verify } from 'hono/jwt';
 
 type Bindings = {
   DB: D1Database;
   JWT_SECRET: string;
 };
 
-// Simple password hashing function (for demonstration purposes)
-// In production, use a proper library like bcrypt
+// Simple password hashing function
 function simpleHash(str: string): string {
-  // This is a very basic implementation for demo purposes
-  // In production, use a proper password hashing algorithm
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0;
   }
   return hash.toString();
 }
@@ -25,24 +22,13 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 // CORS configuration
 app.use('*', cors({
-  origin: (origin) => {
-    // Allow all origins in development, specific ones in production
-    const allowedOrigins = [
-      'https://dentis-charts.pages.dev',
-      'https://dentis-clinic.pp.ua',
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:8080'
-    ];
-    // Return the origin if it's allowed, or the first allowed origin
-    return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-  },
+  origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
 
-// Authentication Middleware for protected routes
+// Authentication Middleware
 const authMiddleware = async (c: any, next: any) => {
   const authHeader = c.req.header('Authorization');
   if (!authHeader) return c.json({ error: 'Unauthorized' }, 401);
@@ -63,21 +49,17 @@ app.get('/', (c) => c.text('Dentis API is running'));
 app.post('/api/auth/login', async (c) => {
   try {
     const { email, password } = await c.req.json();
-    console.log(`Login attempt for: ${email}`);
     
     const user = await c.env.DB.prepare('SELECT users.*, roles.name as roleName FROM users JOIN roles ON users.role_id = roles.id WHERE email = ?')
       .bind(email)
       .first();
 
     if (!user) {
-      console.log('User not found');
       return c.json({ error: 'Invalid credentials' }, 401);
     }
 
-    // Compare hashed passwords instead of direct comparison
     const isValidPassword = simpleHash(password) === user.password_hash;
     if (!isValidPassword) {
-      console.log('Password mismatch');
       return c.json({ error: 'Invalid credentials' }, 401);
     }
 
@@ -85,7 +67,7 @@ app.post('/api/auth/login', async (c) => {
       id: user.id,
       email: user.email,
       role: user.roleName,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24h
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
     };
 
     const token = await sign(payload, c.env.JWT_SECRET);
@@ -96,12 +78,10 @@ app.post('/api/auth/login', async (c) => {
   }
 });
 
-// Registration endpoint for new users
 app.post('/api/auth/register', async (c) => {
   try {
     const { email, password, fullName, roleId } = await c.req.json();
     
-    // Check if user already exists
     const existingUser = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?')
       .bind(email)
       .first();
@@ -110,10 +90,8 @@ app.post('/api/auth/register', async (c) => {
       return c.json({ error: 'User with this email already exists' }, 409);
     }
     
-    // Hash the password
     const hashedPassword = simpleHash(password);
     
-    // Insert new user
     const result = await c.env.DB.prepare(
       'INSERT INTO users (email, password_hash, fullName, role_id) VALUES (?, ?, ?, ?) RETURNING id, email, fullName, role_id'
     )
@@ -132,7 +110,6 @@ app.get('/api/patients', authMiddleware, async (c) => {
   try {
     const { results: patients } = await c.env.DB.prepare('SELECT * FROM patients').all();
     
-    // Fetch visits and tooth data for each patient
     const patientsWithDetails = await Promise.all((patients || []).map(async (patient: any) => {
       const { results: visits } = await c.env.DB.prepare(
         'SELECT v.*, u.fullName as doctorName FROM visits v JOIN users u ON v.doctor_id = u.id WHERE v.patient_id = ? ORDER BY v.visitDate DESC'
@@ -229,10 +206,8 @@ app.delete('/api/patients/:id', authMiddleware, async (c) => {
   const user = c.get('user');
   const patientId = c.req.param('id');
   
-  // Delete related records first
   await c.env.DB.prepare('DELETE FROM tooth_data WHERE patient_id = ?').bind(patientId).run();
   await c.env.DB.prepare('DELETE FROM visits WHERE patient_id = ?').bind(patientId).run();
-  
   await c.env.DB.prepare('DELETE FROM patients WHERE id = ?').bind(patientId).run();
 
   await c.env.DB.prepare(
@@ -325,9 +300,8 @@ app.delete('/api/patients/:patientId/visits/:visitId', authMiddleware, async (c)
 // --- DOCTOR ROUTES ---
 app.get('/api/doctors', authMiddleware, async (c) => {
   try {
-    // Only fetch users with role 'doctor' (role_id = 2)
     const { results } = await c.env.DB.prepare('SELECT id, fullName as name, email FROM users WHERE role_id = 2').all();
-    return c.json(results.map(d => ({ ...d, id: d.id.toString(), specialty: 'Лікар' })));
+    return c.json(results.map((d: any) => ({ ...d, id: d.id.toString(), specialty: 'Лікар' })));
   } catch (error: any) {
     return c.json({ error: 'Database error', details: error.message }, 500);
   }
