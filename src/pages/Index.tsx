@@ -50,20 +50,9 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 overflow-hidden p-4">
-        <div
-    className="absolute inset-0 bg-cover bg-center opacity-40"
-    style={{ backgroundImage: "url('/src/assets/favicon.png')" }}
-  ></div>
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg">
-          <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-            <PatientList />
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={70} minSize={40}>
-            <DentalChart />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+      <main className="flex-1 flex flex-col md:flex-row p-2 md:p-4 gap-2 md:gap-4 overflow-hidden"> 
+            <PatientList />          
+            <DentalChart />     
       </main>
     </div>
   );

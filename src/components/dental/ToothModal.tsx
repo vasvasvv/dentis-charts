@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ToothRecord, FileAttachment, DENTAL_TEMPLATES } from '@/types/dental';
-import { Upload, X, FileText, Image } from 'lucide-react';
+import { ToothRecord, DENTAL_TEMPLATES } from '@/types/dental';
 import { Badge } from '@/components/ui/badge';
 
 interface ToothModalProps {
@@ -17,48 +16,30 @@ interface ToothModalProps {
 }
 
 export function ToothModal({ isOpen, onClose, toothNumber, record, onSave }: ToothModalProps) {
-  const [templateId, setTemplateId] = useState(record?.templateId || '');
-  const [description, setDescription] = useState(record?.description || '');
-  const [notes, setNotes] = useState(record?.notes || '');
-  const [files, setFiles] = useState<FileAttachment[]>(record?.files || []);
+  const [templateId, setTemplateId] = useState('');
+  const [description, setDescription] = useState('');
+  const [notes, setNotes] = useState('');
 
+  // Синхронізація з record при відкритті
   useEffect(() => {
-    setTemplateId(record?.templateId || '');
-    setDescription(record?.description || '');
-    setNotes(record?.notes || '');
-    setFiles(record?.files || []);
-  }, [record, toothNumber]);
+    if (isOpen) {
+      setTemplateId(record?.templateId || '');
+      setDescription(record?.description || '');
+      setNotes(record?.notes || '');
+    }
+  }, [isOpen, record, toothNumber]);
 
   const handleTemplateChange = (value: string) => {
     setTemplateId(value);
+    if (value === '__clear__') {
+      setTemplateId('');
+      setDescription('');
+      return;
+    }
     const template = DENTAL_TEMPLATES.find(t => t.id === value);
     if (template) {
       setDescription(template.description);
     }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFiles = e.target.files;
-    if (!uploadedFiles) return;
-
-    Array.from(uploadedFiles).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newFile: FileAttachment = {
-          id: `file-${Date.now()}-${Math.random()}`,
-          name: file.name,
-          type: file.type,
-          data: reader.result as string,
-          uploadedAt: new Date().toISOString(),
-        };
-        setFiles(prev => [...prev, newFile]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeFile = (fileId: string) => {
-    setFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
   const handleSave = () => {
@@ -67,7 +48,8 @@ export function ToothModal({ isOpen, onClose, toothNumber, record, onSave }: Too
       templateId,
       description,
       notes,
-      files,
+      files: record?.files || [],
+      updatedAt: new Date().toISOString(),
     });
     onClose();
   };
@@ -76,13 +58,9 @@ export function ToothModal({ isOpen, onClose, toothNumber, record, onSave }: Too
     setTemplateId('');
     setDescription('');
     setNotes('');
-    setFiles([]);
   };
 
-  const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="w-4 h-4" />;
-    return <FileText className="w-4 h-4" />;
-  };
+  const currentTemplate = DENTAL_TEMPLATES.find(t => t.id === templateId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -93,109 +71,64 @@ export function ToothModal({ isOpen, onClose, toothNumber, record, onSave }: Too
               {toothNumber}
             </span>
             Зуб №{toothNumber}
+            {currentTemplate && (
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {currentTemplate.label}
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Template Selection */}
+          {/* Шаблон стану */}
           <div className="space-y-2">
-            <Label>Шаблон стану</Label>
+            <Label>Стан зуба</Label>
             <Select value={templateId} onValueChange={handleTemplateChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Оберіть стан" />
+                <SelectValue placeholder="Оберіть стан зуба" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__clear__">— Очистити —</SelectItem>
                 {DENTAL_TEMPLATES.map(template => (
                   <SelectItem key={template.id} value={template.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{template.label}</span>                      
-                    </div>
+                    {template.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Description */}
+          {/* Опис */}
           <div className="space-y-2">
             <Label>Опис</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Додайте опис"
+              placeholder="Детальний опис стану зуба..."
               rows={2}
             />
           </div>
 
-          {/* Notes */}
+          {/* Примітки */}
           <div className="space-y-2">
             <Label>Додаткові примітки</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Додайте примітки"
+              placeholder="Примітки до лікування, рекомендації..."
               rows={3}
             />
-          </div>
-
-          {/* File Upload */}
-          <div className="space-y-2">
-            <Label>Вкладення</Label>
-            <div className="border-2 border-dashed rounded-lg p-4 text-center hover:border-primary/50 transition-colors">
-              <input
-                type="file"
-                multiple
-                accept="image/*,.pdf,.doc,.docx"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Натисніть для завантаження файлів
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Зображення, PDF або документи
-                </p>
-              </label>
-            </div>
-
-            {/* File List */}
-            {files.length > 0 && (
-              <div className="space-y-2 mt-3">
-                {files.map(file => (
-                  <div
-                    key={file.id}
-                    className="flex items-center justify-between p-2 bg-muted rounded-lg"
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      {getFileIcon(file.type)}
-                      <span className="text-sm truncate">{file.name}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0"
-                      onClick={() => removeFile(file.id)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleClear}>
+          <Button variant="outline" type="button" onClick={handleClear}>
             Очистити
           </Button>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" type="button" onClick={onClose}>
             Скасувати
           </Button>
-          <Button onClick={handleSave}>
+          <Button type="button" onClick={handleSave}>
             Зберегти
           </Button>
         </DialogFooter>

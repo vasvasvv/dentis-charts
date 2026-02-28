@@ -57,24 +57,8 @@ export function DentalChart() {
   const issueCount = patient.dentalChart.filter(t => t.description || t.notes || t.files.length > 0).length;
 
   return (
-    <Card className="flex-1 overflow-hidden animate-fade-in bg-muted/5">
-                       {/* ─── Фонова картинка 400×400 по центру, напівпрозора ─── */}
-            <div
-              className="
-                absolute inset-0 
-                flex items-center justify-center pointer-events-none
-              "
-            >
-              <div
-                className="
-                  w-[400px] h-[400px] 
-                  bg-[url('/src/assets/favicon.png')]   
-                  bg-no-repeat bg-center bg-contain     
-                  opacity-10                           
-                  transition-opacity duration-700
-                "
-              />
-            </div>
+    <Card className="rounded-lg border text-card-foreground shadow-sm flex-1 overflow-hidden animate-fade-in bg-muted/5">
+                   
       <CardHeader className="border-b bg-card p-3 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>

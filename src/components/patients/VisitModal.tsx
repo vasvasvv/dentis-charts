@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,32 +12,60 @@ interface VisitModalProps {
   isOpen: boolean;
   onClose: () => void;
   patientId: string;
+  // Опціонально — для редагування існуючого візиту
+  visitId?: string;
+  initialDate?: string;
+  initialType?: 'past' | 'future';
+  initialNotes?: string;
+  initialDoctorId?: string;
 }
 
-export function VisitModal({ isOpen, onClose, patientId }: VisitModalProps) {
-  const { selectedDoctorId, doctors, addVisit } = useClinic();
-  
-  const [date, setDate] = useState('');
-  const [type, setType] = useState<'past' | 'future'>('future');
-  const [notes, setNotes] = useState('');
-  const [doctorId, setDoctorId] = useState(selectedDoctorId || '');
+export function VisitModal({
+  isOpen,
+  onClose,
+  patientId,
+  visitId,
+  initialDate = '',
+  initialType = 'future',
+  initialNotes = '',
+  initialDoctorId,
+}: VisitModalProps) {
+  const { selectedDoctorId, doctors, addVisit, updateVisit } = useClinic();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [date, setDate] = useState(initialDate);
+  const [type, setType] = useState<'past' | 'future'>(initialType);
+  const [notes, setNotes] = useState(initialNotes);
+  const [doctorId, setDoctorId] = useState(initialDoctorId || selectedDoctorId || '');
+
+  const isEditing = !!visitId;
+
+  // Синхронізувати стан при відкритті модалки
+  useEffect(() => {
+    if (isOpen) {
+      setDate(initialDate);
+      setType(initialType);
+      setNotes(initialNotes);
+      setDoctorId(initialDoctorId || selectedDoctorId || (doctors.length > 0 ? doctors[0].id : ''));
+    }
+  }, [isOpen, initialDate, initialType, initialNotes, initialDoctorId, selectedDoctorId, doctors]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!doctorId) return;
+    if (!doctorId || !date) return;
 
-    addVisit(patientId, {
-      date,
+    const visitData = {
+      date,       // ← фронт використовує "date"
       type,
       notes,
-      doctorId: doctorId,
-    });
-    
-    setDate('');
-    setType('future');
-    setNotes('');
-    setDoctorId(selectedDoctorId || '');
+      doctorId,
+    };
+
+    if (isEditing && visitId) {
+      await updateVisit(patientId, visitId, visitData);
+    } else {
+      await addVisit(patientId, visitData);
+    }
+
     onClose();
   };
 
@@ -45,7 +73,9 @@ export function VisitModal({ isOpen, onClose, patientId }: VisitModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading">Додати візит</DialogTitle>
+          <DialogTitle className="font-heading">
+            {isEditing ? 'Редагувати візит' : 'Додати візит'}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -65,11 +95,11 @@ export function VisitModal({ isOpen, onClose, patientId }: VisitModalProps) {
             <RadioGroup value={type} onValueChange={(v) => setType(v as 'past' | 'future')}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="future" id="future" />
-                <Label htmlFor="future" className="font-normal">Запланований (майбутній)</Label>
+                <Label htmlFor="future" className="font-normal cursor-pointer">Запланований (майбутній)</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="past" id="past" />
-                <Label htmlFor="past" className="font-normal">Завершений (минулий)</Label>
+                <Label htmlFor="past" className="font-normal cursor-pointer">Завершений (минулий)</Label>
               </div>
             </RadioGroup>
           </div>
@@ -105,7 +135,9 @@ export function VisitModal({ isOpen, onClose, patientId }: VisitModalProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Скасувати
             </Button>
-            <Button type="submit" disabled={!doctorId}>Додати візит</Button>
+            <Button type="submit" disabled={!doctorId || !date}>
+              {isEditing ? 'Зберегти' : 'Додати візит'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
