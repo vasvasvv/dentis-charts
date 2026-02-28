@@ -7,6 +7,20 @@ type Bindings = {
   JWT_SECRET: string;
 };
 
+// Simple password hashing function (for demonstration purposes)
+// In production, use a proper library like bcrypt
+function simpleHash(str: string): string {
+  // This is a very basic implementation for demo purposes
+  // In production, use a proper password hashing algorithm
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash.toString();
+}
+
 const app = new Hono<{ Bindings: Bindings }>();
 
 app.use('*', cors());
@@ -43,7 +57,9 @@ app.post('/api/auth/login', async (c) => {
       return c.json({ error: 'Invalid credentials' }, 401);
     }
 
-    if (user.password_hash !== password) {
+    // Compare hashed passwords instead of direct comparison
+    const isValidPassword = simpleHash(password) === user.password_hash;
+    if (!isValidPassword) {
       console.log('Password mismatch');
       return c.json({ error: 'Invalid credentials' }, 401);
     }
@@ -59,6 +75,37 @@ app.post('/api/auth/login', async (c) => {
     return c.json({ token, user: { id: user.id, email: user.email, role: user.roleName, fullName: user.fullName } });
   } catch (error: any) {
     console.error('Login error:', error);
+    return c.json({ error: 'Internal Server Error', details: error.message }, 500);
+  }
+});
+
+// Registration endpoint for new users
+app.post('/api/auth/register', async (c) => {
+  try {
+    const { email, password, fullName, roleId } = await c.req.json();
+    
+    // Check if user already exists
+    const existingUser = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?')
+      .bind(email)
+      .first();
+      
+    if (existingUser) {
+      return c.json({ error: 'User with this email already exists' }, 409);
+    }
+    
+    // Hash the password
+    const hashedPassword = simpleHash(password);
+    
+    // Insert new user
+    const result = await c.env.DB.prepare(
+      'INSERT INTO users (email, password_hash, fullName, role_id) VALUES (?, ?, ?, ?) RETURNING id, email, fullName, role_id'
+    )
+    .bind(email, hashedPassword, fullName, roleId)
+    .first();
+    
+    return c.json({ message: 'User registered successfully', user: result });
+  } catch (error: any) {
+    console.error('Registration error:', error);
     return c.json({ error: 'Internal Server Error', details: error.message }, 500);
   }
 });
