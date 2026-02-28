@@ -23,7 +23,7 @@ export function LoginPage() {
     // Simulate network delay for better UX
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const result = login(username, password);
+    const result = await login(username, password);
     if (!result.success) {
       setError(result.error || 'Помилка входу');
     }
@@ -31,19 +31,57 @@ export function LoginPage() {
     setIsLoading(false);
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <div className="w-full max-w-md animate-fade-in">
+return (
+    <div className="min-h-screen flex items-center justify-center     bg-gradient-to-br 
+              from-[hsl(40,25%,97%)] 
+              via-[hsl(38,30%,95%)] 
+              to-[hsl(36,28%,93%)] p-4 relative overflow-hidden">
+
+      {/* ─── Фонова картинка 400×400 по центру, напівпрозора ─── */}
+      <div
+        className="
+          absolute inset-0 
+          flex items-center justify-center pointer-events-none
+        "
+      >
+        <div
+          className="
+            w-[400px] h-[400px] 
+            bg-[url('/src/assets/favicon.png')]   
+            bg-no-repeat bg-center bg-contain     
+            opacity-70                           
+            transition-opacity duration-700
+          "
+        />
+      </div>
+
+      {/* ─── Основний контент (форма) ─── */}
+      <div className="w-full max-w-md animate-fade-in  
+              shadow-2xl 
+              border border-border/40
+              rounded-2xl
+              bg-gradient-to-tl 
+    from-[#fdfaf5]
+    via-[#fbf7f0]
+    to-[#f8f3ea]
+                     
+              backdrop-blur-[2px]               
+              overflow-hidden
+              relativ
+              z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg mb-4">
-            <Stethoscope className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <h1 className="font-heading text-2xl font-bold text-foreground">Dentis</h1>
-          <p className="text-muted-foreground mt-1">Стоматологічна клініка</p>
+         <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent overflow-hidden shadow-lg mb-4 mt-10">
+           <img 
+             src="/src/assets/logo.png"          
+             alt="Dentis Logo"
+             className="w-full h-full object-cover"  
+            />
+         </div>
+           <h1 className="font-heading text-2xl font-bold text-foreground">Dentis</h1>
+           <p className="text-muted-foreground mt-1">Стоматологічна клініка</p>
         </div>
-
-        <Card className="shadow-medium border-0 bg-muted/3">
+        <Card className="shadow-medium border-0 bg-muted/3e">         
           <CardHeader className="text-center pb-2">
             <CardTitle className="font-heading text-xl">Ласкаво просимо</CardTitle>
             <CardDescription>Увійдіть для доступу до системи</CardDescription>
@@ -103,22 +141,11 @@ export function LoginPage() {
                 {isLoading ? 'Вхід...' : 'Увійти'}
               </Button>
             </form>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 rounded-lg bg-muted/50">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Демо дані для входу:</p>
-              <div className="space-y-1 text-xs">
-                <p><span className="font-medium">Супер Адмін:</span> admin / admin123</p>
-                <p><span className="font-medium">Верховський:</span> verkhovskyi / doctor123</p>
-                <p><span className="font-medium">АЄ:</span> anton / doctor123</p>
-                <p><span className="font-medium">Адміністратор:</span> reception / reception123</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Працює офлайн • Дані зберігаються локально • Щотижневе резервне копіювання
+        <p className="text-center text-xs text-muted-foreground mb-3 mt-3">
+         • Працює онлайн • Дані не зберігаються локально • 
         </p>
       </div>
     </div>
