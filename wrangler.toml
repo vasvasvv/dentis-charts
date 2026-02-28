@@ -11,12 +11,3 @@ pages_build_output_dir = "dist"
 binding = "DB"
 database_name = "dentis-charts"
 database_id = "b48cc22c-3812-4648-9be5-71a9eae1458c"
-
-# Environment variables (set via wrangler secret put JWT_SECRET)
-# For local dev, use .dev.vars file
-s]
-# JWT_SECRET should be set via Cloudflare Dashboard > Pages > Settings > Environment Variables
-# For local dev, use .dev.vars file
-JWT_SECRET має бути встановлений через wrangler secret put JWT_SECRET
-# Для локальної розробки використовуйте .dev.vars файл
-� використовуйте .dev.vars файл
