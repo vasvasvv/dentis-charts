@@ -39,8 +39,8 @@ npm install
 Потім задеплойте worker:
 
 ```bash
-export CLOUDFLARE_API_TOKEN="FTOFM5dxCD0ypXdojzv_P6DbFG5AbcwYZeOcRYRJ"
-export CLOUDFLARE_ACCOUNT_ID="a22d80896b0eccc01b40478bc64c9849"
+export CLOUDFLARE_API_TOKEN="YOUR_CLOUDFLARE_API_TOKEN"
+export CLOUDFLARE_ACCOUNT_ID="YOUR_CLOUDFLARE_ACCOUNT_ID"
 wrangler deploy
 ```
 
