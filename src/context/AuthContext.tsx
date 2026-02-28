@@ -9,7 +9,7 @@ interface AuthContextType {
   canPerformAction: (action: 'add' | 'edit' | 'delete', resource: 'patient' | 'dental' | 'user') => boolean;
 }
 
-const API_URL = 'https://YOUR_CLOUDFLARE_WORKER_SUBDOMAIN.YOUR_NAMESPACE.workers.dev';
+const API_URL = 'https://dentis-charts.pages.dev';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
