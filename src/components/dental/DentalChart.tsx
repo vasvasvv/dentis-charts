@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tooth } from './Tooth';
 import { ToothModal } from './ToothModal';
 import { VisitHistory } from './VisitHistory';
+import { Form043PrintButton } from './Form043PrintButton';
 import { UPPER_TEETH, LOWER_TEETH, ToothRecord } from '@/types/dental';
 import { useClinic } from '@/context/ClinicContext';
 import { useAuth } from '@/context/AuthContext';
@@ -80,6 +81,7 @@ export function DentalChart() {
               <Badge variant="destructive" className="text-xs">{issueCount} проблем</Badge>
             )}
             <Badge variant="secondary" className="text-xs">32 зуби</Badge>
+            <Form043PrintButton className="ml-2" />
           </div>
         </div>
       </CardHeader>
