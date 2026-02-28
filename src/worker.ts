@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { sign, verify } from 'hono/jwt';
 
 type Bindings = {
@@ -7,7 +6,6 @@ type Bindings = {
   JWT_SECRET: string;
 };
 
-// Simple password hashing function
 function simpleHash(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -20,15 +18,19 @@ function simpleHash(str: string): string {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// CORS configuration
-app.use('*', cors({
-  origin: '*',
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
+// Manual CORS middleware
+app.use('*', async (c, next) => {
+  c.header('Access-Control-Allow-Origin', '*');
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (c.req.method === 'OPTIONS') {
+    return c.text('', 204);
+  }
+  
+  await next();
+});
 
-// Authentication Middleware
 const authMiddleware = async (c: any, next: any) => {
   const authHeader = c.req.header('Authorization');
   if (!authHeader) return c.json({ error: 'Unauthorized' }, 401);
@@ -45,7 +47,6 @@ const authMiddleware = async (c: any, next: any) => {
 
 app.get('/', (c) => c.text('Dentis API is running'));
 
-// --- AUTH ROUTES ---
 app.post('/api/auth/login', async (c) => {
   try {
     const { email, password } = await c.req.json();
@@ -100,12 +101,10 @@ app.post('/api/auth/register', async (c) => {
     
     return c.json({ message: 'User registered successfully', user: result });
   } catch (error: any) {
-    console.error('Registration error:', error);
     return c.json({ error: 'Internal Server Error', details: error.message }, 500);
   }
 });
 
-// --- PATIENT ROUTES ---
 app.get('/api/patients', authMiddleware, async (c) => {
   try {
     const { results: patients } = await c.env.DB.prepare('SELECT * FROM patients').all();
@@ -217,7 +216,6 @@ app.delete('/api/patients/:id', authMiddleware, async (c) => {
   return c.json({ success: true });
 });
 
-// --- TOOTH DATA ROUTES ---
 app.get('/api/patients/:id/teeth', authMiddleware, async (c) => {
   const patientId = c.req.param('id');
   const { results } = await c.env.DB.prepare('SELECT * FROM tooth_data WHERE patient_id = ?')
@@ -257,7 +255,6 @@ app.post('/api/patients/:id/teeth', authMiddleware, async (c) => {
   return c.json(result);
 });
 
-// --- VISITS ---
 app.get('/api/patients/:id/visits', authMiddleware, async (c) => {
   const patientId = c.req.param('id');
   const { results } = await c.env.DB.prepare('SELECT v.*, u.fullName as doctorName FROM visits v JOIN users u ON v.doctor_id = u.id WHERE patient_id = ? ORDER BY v.visitDate DESC')
@@ -297,7 +294,6 @@ app.delete('/api/patients/:patientId/visits/:visitId', authMiddleware, async (c)
   return c.json({ success: true });
 });
 
-// --- DOCTOR ROUTES ---
 app.get('/api/doctors', authMiddleware, async (c) => {
   try {
     const { results } = await c.env.DB.prepare('SELECT id, fullName as name, email FROM users WHERE role_id = 2').all();
