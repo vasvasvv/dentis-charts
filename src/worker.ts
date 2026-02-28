@@ -7,6 +7,12 @@ type Bindings = {
   JWT_SECRET: string;
 };
 
+app.use('*', cors({
+  origin: ['https://dentis-charts.pages.dev', 'http://localhost:3000', 'http://localhost:5173'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+}));
+
 // Simple password hashing function (for demonstration purposes)
 // In production, use a proper library like bcrypt
 function simpleHash(str: string): string {
