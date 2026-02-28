@@ -6,8 +6,9 @@
   "homepage": "https://github.com/vasvasvv/dentis-charts",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:pages": "vite build",
+    "build": "vite build && npm run build:worker",
+    "build:worker": "npx esbuild src/worker.ts --bundle --format=esm --outfile=dist/_worker.js --platform=neutral --external:hono --external:hono/* && cp public/_routes.json dist/",
+    "build:pages": "npm run build",
     "predeploy": "npm run build",
     "deploy": "cross-env GH_PAGES=1 npm run build && gh-pages -d dist",
     "build:dev": "vite build --mode development",
@@ -15,7 +16,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "deploy:worker": "wrangler deploy"
+    "deploy:pages": "npm run build && wrangler pages deploy dist"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20260305.0",
