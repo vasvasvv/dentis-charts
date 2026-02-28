@@ -22,6 +22,25 @@ type Variables = {
   user: { id: number; email: string; role: string; exp: number }
 }
 
+// ─── Матриця прав ─────────────────────────────────────────────────────────────
+//
+//  Роль        | читання | додавання | редагування | видалення
+//  ------------|---------|-----------|-------------|----------
+//  superadmin  |   ✅   |    ✅    |     ✅     |    ✅
+//  doctor      |   ✅   |    ✅    |     ✅     |    ✅
+//  admin       |   ✅   |    ✅    |     ✅     |    ❌
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CAN_READ   = ['superadmin', 'doctor', 'admin']
+const CAN_CREATE = ['superadmin', 'doctor', 'admin']
+const CAN_UPDATE = ['superadmin', 'doctor', 'admin']
+const CAN_DELETE = ['superadmin', 'doctor']          // ← admin не може видаляти
+
+function hasRole(role: string, allowed: string[]): boolean {
+  return allowed.includes(role)
+}
+
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 app.use(
@@ -39,8 +58,8 @@ app.use(
   })
 )
 
-// ✅ FIX #1: Pass alg: 'HS256' to verify() — without it JwtAlgorithmRequired is thrown
-//    and ALL protected endpoints return 401 "Invalid token"
+// ─── Middleware: перевірка JWT ────────────────────────────────────────────────
+
 const authMiddleware = async (c: any, next: any) => {
   const authHeader = c.req.header('Authorization')
   if (!authHeader) return c.json({ error: 'Unauthorized' }, 401)
@@ -53,6 +72,19 @@ const authMiddleware = async (c: any, next: any) => {
   } catch (err: any) {
     return c.json({ error: 'Invalid token', details: err.message }, 401)
   }
+}
+
+// ─── Middleware: перевірка ролі ───────────────────────────────────────────────
+
+const requireRole = (allowed: string[]) => async (c: any, next: any) => {
+  const user = c.get('user')
+  if (!user || !hasRole(user.role, allowed)) {
+    return c.json({
+      error: 'Forbidden',
+      message: `Доступ заборонено. Ваша роль (${user?.role}) не має права виконувати цю дію.`,
+    }, 403)
+  }
+  await next()
 }
 
 app.get('/', (c) => c.text('Dentis API is running'))
@@ -81,9 +113,21 @@ app.post('/api/auth/login', async (c) => {
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24h
     }
     const token = await sign(payload, c.env.JWT_SECRET)
+
     return c.json({
       token,
-      user: { id: user.id, email: user.email, role: user.roleName, fullName: user.fullName },
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.roleName,
+        fullName: user.fullName,
+        // Передаємо дозволи на фронт, щоб не дублювати логіку приховування кнопок
+        permissions: {
+          canCreate: hasRole(user.roleName, CAN_CREATE),
+          canUpdate: hasRole(user.roleName, CAN_UPDATE),
+          canDelete: hasRole(user.roleName, CAN_DELETE),
+        },
+      },
     })
   } catch (error: any) {
     console.error('Login error:', error)
@@ -116,9 +160,8 @@ app.post('/api/auth/register', async (c) => {
 
 // ─── PATIENTS ────────────────────────────────────────────────────────────────
 
-// ✅ FIX #2: Changed INNER JOIN → LEFT JOIN on visits so a patient loads
-//    even if the assigned doctor was deleted from users table
-app.get('/api/patients', authMiddleware, async (c) => {
+// Читання — всі ролі
+app.get('/api/patients', authMiddleware, requireRole(CAN_READ), async (c) => {
   try {
     const { results: patients } = await c.env.DB.prepare('SELECT * FROM patients').all()
 
@@ -155,7 +198,7 @@ app.get('/api/patients', authMiddleware, async (c) => {
   }
 })
 
-app.get('/api/patients/:id', authMiddleware, async (c) => {
+app.get('/api/patients/:id', authMiddleware, requireRole(CAN_READ), async (c) => {
   try {
     const patientId = c.req.param('id')
     const patient = await c.env.DB.prepare('SELECT * FROM patients WHERE id = ?')
@@ -163,7 +206,6 @@ app.get('/api/patients/:id', authMiddleware, async (c) => {
       .first()
     if (!patient) return c.json({ error: 'Patient not found' }, 404)
 
-    // ✅ FIX #2 (same): LEFT JOIN
     const { results: visits } = await c.env.DB.prepare(
       'SELECT v.*, u.fullName as doctorName FROM visits v LEFT JOIN users u ON v.doctor_id = u.id WHERE v.patient_id = ? ORDER BY v.visitDate DESC'
     )
@@ -191,7 +233,8 @@ app.get('/api/patients/:id', authMiddleware, async (c) => {
   }
 })
 
-app.post('/api/patients', authMiddleware, async (c) => {
+// Додавання — superadmin, doctor, admin
+app.post('/api/patients', authMiddleware, requireRole(CAN_CREATE), async (c) => {
   const user = c.get('user')
   const data = await c.req.json()
   const { firstName, lastName, middleName, gender, dateOfBirth, phone, email, address, notes, doctorId } = data
@@ -211,7 +254,8 @@ app.post('/api/patients', authMiddleware, async (c) => {
   return c.json(result)
 })
 
-app.put('/api/patients/:id', authMiddleware, async (c) => {
+// Редагування — superadmin, doctor, admin
+app.put('/api/patients/:id', authMiddleware, requireRole(CAN_UPDATE), async (c) => {
   const user = c.get('user')
   const patientId = c.req.param('id')
   const data = await c.req.json()
@@ -232,7 +276,8 @@ app.put('/api/patients/:id', authMiddleware, async (c) => {
   return c.json(result)
 })
 
-app.delete('/api/patients/:id', authMiddleware, async (c) => {
+// Видалення — тільки superadmin і doctor (admin НЕ може)
+app.delete('/api/patients/:id', authMiddleware, requireRole(CAN_DELETE), async (c) => {
   const user = c.get('user')
   const patientId = c.req.param('id')
   await c.env.DB.prepare('DELETE FROM tooth_data WHERE patient_id = ?').bind(patientId).run()
@@ -248,7 +293,7 @@ app.delete('/api/patients/:id', authMiddleware, async (c) => {
 
 // ─── TEETH ───────────────────────────────────────────────────────────────────
 
-app.get('/api/patients/:id/teeth', authMiddleware, async (c) => {
+app.get('/api/patients/:id/teeth', authMiddleware, requireRole(CAN_READ), async (c) => {
   const patientId = c.req.param('id')
   const { results } = await c.env.DB.prepare('SELECT * FROM tooth_data WHERE patient_id = ?')
     .bind(patientId)
@@ -256,7 +301,9 @@ app.get('/api/patients/:id/teeth', authMiddleware, async (c) => {
   return c.json(results)
 })
 
-app.post('/api/patients/:id/teeth', authMiddleware, async (c) => {
+// Додавання/оновлення зуба — superadmin, doctor, admin
+// POST використовується і для create і для update (upsert) — перевіряємо обидва права
+app.post('/api/patients/:id/teeth', authMiddleware, requireRole(CAN_CREATE), async (c) => {
   const user = c.get('user')
   const patientId = c.req.param('id')
   const { tooth_number, status, notes } = await c.req.json()
@@ -269,6 +316,9 @@ app.post('/api/patients/:id/teeth', authMiddleware, async (c) => {
 
   let result: any
   if (existing) {
+    if (!hasRole(user.role, CAN_UPDATE)) {
+      return c.json({ error: 'Forbidden', message: 'Недостатньо прав для редагування зуба.' }, 403)
+    }
     result = await c.env.DB.prepare(
       'UPDATE tooth_data SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *'
     )
@@ -296,8 +346,7 @@ app.post('/api/patients/:id/teeth', authMiddleware, async (c) => {
 
 // ─── VISITS ──────────────────────────────────────────────────────────────────
 
-// ✅ FIX #3: LEFT JOIN here too
-app.get('/api/patients/:id/visits', authMiddleware, async (c) => {
+app.get('/api/patients/:id/visits', authMiddleware, requireRole(CAN_READ), async (c) => {
   const patientId = c.req.param('id')
   const { results } = await c.env.DB.prepare(
     'SELECT v.*, u.fullName as doctorName FROM visits v LEFT JOIN users u ON v.doctor_id = u.id WHERE v.patient_id = ? ORDER BY v.visitDate DESC'
@@ -307,7 +356,8 @@ app.get('/api/patients/:id/visits', authMiddleware, async (c) => {
   return c.json(results)
 })
 
-app.post('/api/patients/:id/visits', authMiddleware, async (c) => {
+// Додавання — superadmin, doctor, admin
+app.post('/api/patients/:id/visits', authMiddleware, requireRole(CAN_CREATE), async (c) => {
   const user = c.get('user')
   const patientId = c.req.param('id')
   const { visitDate, type, reason, notes, doctorId } = await c.req.json()
@@ -327,8 +377,8 @@ app.post('/api/patients/:id/visits', authMiddleware, async (c) => {
   return c.json(result)
 })
 
-// ✅ FIX #4: Added missing PUT /visits/:visitId endpoint
-app.put('/api/patients/:patientId/visits/:visitId', authMiddleware, async (c) => {
+// Редагування — superadmin, doctor, admin
+app.put('/api/patients/:patientId/visits/:visitId', authMiddleware, requireRole(CAN_UPDATE), async (c) => {
   const user = c.get('user')
   const { patientId, visitId } = c.req.param()
   const { visitDate, type, reason, notes, doctorId } = await c.req.json()
@@ -350,7 +400,8 @@ app.put('/api/patients/:patientId/visits/:visitId', authMiddleware, async (c) =>
   return c.json(result)
 })
 
-app.delete('/api/patients/:patientId/visits/:visitId', authMiddleware, async (c) => {
+// Видалення — тільки superadmin і doctor (admin НЕ може)
+app.delete('/api/patients/:patientId/visits/:visitId', authMiddleware, requireRole(CAN_DELETE), async (c) => {
   const user = c.get('user')
   const { patientId, visitId } = c.req.param()
   await c.env.DB.prepare('DELETE FROM visits WHERE id = ? AND patient_id = ?')
@@ -366,12 +417,11 @@ app.delete('/api/patients/:patientId/visits/:visitId', authMiddleware, async (c)
 
 // ─── DOCTORS ─────────────────────────────────────────────────────────────────
 
-// ✅ FIX #5: Include superadmin (role_id=1) in doctors list — they can also
-//    be assigned as a doctor. Original code used role_id = 2 only.
-app.get('/api/doctors', authMiddleware, async (c) => {
+// Тільки лікарі (role_id = 2) — superadmin свідомо виключений зі списку
+app.get('/api/doctors', authMiddleware, requireRole(CAN_READ), async (c) => {
   try {
     const { results } = await c.env.DB.prepare(
-      'SELECT id, fullName as name, email FROM users WHERE role_id=2'
+      'SELECT id, fullName as name, email FROM users WHERE role_id = 2'
     ).all()
     return c.json(results.map((d: any) => ({ ...d, id: d.id.toString(), specialty: 'Лікар' })))
   } catch (error: any) {
