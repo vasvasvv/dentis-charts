@@ -22,7 +22,7 @@ interface ClinicContextType {
   addHistoryEntry: (patientId: string, entry: any) => void;
 }
 
-const API_URL = 'https://dentis-charts.pages.dev';
+const API_URL = import.meta.env.VITE_API_URL || 'https://dentis-cards-api.nesterenkovasil9.workers.dev';
 const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
 
 export function ClinicProvider({ children }: { children: React.ReactNode }) {
