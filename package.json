@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://kernesgenaa-a11y.github.io/dental-health-hub",
+  "homepage": "https://github.com/vasvasvv/dentis-charts",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
