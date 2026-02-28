@@ -17,5 +17,5 @@ binding = "DB"
 database_name = "dentis-charts"
 database_id = "YOUR_D1_DATABASE_ID"
 
-[vars]
-JWT_SECRET = "your-secret-key-here-change-in-production"
+# JWT_SECRET має бути встановлений через wrangler secret put JWT_SECRET
+# Для локальної розробки використовуйте .dev.vars файл

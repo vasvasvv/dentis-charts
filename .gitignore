@@ -1,4 +1,3 @@
-```
 # Dependencies
 node_modules/
 
@@ -7,10 +6,12 @@ dist/
 build/
 target/
 
-# Environment variables
+# Environment variables and secrets
 .env
 .env.local
 .env.*
+.dev.vars
+wrangler.toml
 
 # IDE files
 .vscode/
