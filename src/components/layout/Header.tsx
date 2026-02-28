@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Stethoscope, LogOut, User, Shield } from 'lucide-react';
+import logoSrc from '@/assets/logo.png';
+
 export function Header() {
   const {
     clinicName,
@@ -43,9 +45,13 @@ export function Header() {
       <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6 text-destructive-foreground bg-[#137a7c]">
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
+            <div className="w-14 h-14 mx-auto rounded-2xl btn-gradient  overflow-hidden shadow-lg mb-4">
+            <img
+              src={logoSrc}
+              alt="Dentis Logo"
+              className="w-full h-full object-cover"
+            />
+          </div>
             <div>
               <h1 className="font-heading font-bold text-base md:text-lg leading-none">{clinicName}</h1>
               <p className="text-[10px] md:text-xs opacity-80 hidden sm:block">Стоматологічна клініка</p>

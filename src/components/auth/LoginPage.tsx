@@ -44,7 +44,7 @@ export function LoginPage() {
 
       {/* Основний контент  */}
       <div className="w-full max-w-md animate-fade-in  
-              shadow-2xl 
+              shadow-lg 
               border border-border/40
               rounded-2xl
               bg-gradient-to-tl 
@@ -58,7 +58,7 @@ export function LoginPage() {
 
         {/* Логотип */}
         <div className="text-center mb-8 mt-10">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent overflow-hidden shadow-lg mb-4">
+          <div className="w-20 h-20 mx-auto rounded-2xl btn-gradient  overflow-hidden shadow-lg mb-4">
             <img
               src={logoSrc}
               alt="Dentis Logo"
