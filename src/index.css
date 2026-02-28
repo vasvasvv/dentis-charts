@@ -2,21 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
-
-@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Lora&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata&display=swap");
 
 @layer base {
   :root {
