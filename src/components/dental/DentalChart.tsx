@@ -60,7 +60,7 @@ export function DentalChart() {
   return (
     <Card className="rounded-lg border text-card-foreground shadow-sm flex-1 overflow-hidden animate-fade-in bg-muted/5">
                    
-      <CardHeader className="border-b bg-card p-3 md:p-6">
+      <CardHeader className="border-b bg-card/80 p-3 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <CardTitle className="font-heading text-lg md:text-xl">

@@ -42,10 +42,10 @@ export function Header() {
   };
   const roleInfo = currentUser ? getRoleBadge(currentUser.role) : null;
   return <header className="header-gradient text-primary-foreground shadow-lg">
-      <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6 text-destructive-foreground bg-[#137a7c]">
+      <div className="flex items-center justify-between h-18 md:h-18 px-3 md:px-6 text-destructive-foreground bg-[#137a7c]">
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-2 md:gap-3">
-            <div className="w-14 h-14 mx-auto rounded-2xl btn-gradient  overflow-hidden shadow-lg mb-4">
+            <div className="w-14 h-14 mx-auto rounded-2xl btn-gradient  overflow-hidden shadow-lg mb-2 mt-2">
             <img
               src={logoSrc}
               alt="Dentis Logo"

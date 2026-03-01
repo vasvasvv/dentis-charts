@@ -49,6 +49,7 @@ Thumbs.db:encryptable
 .env.local
 .env.*
 !.env.example
+.dev.vars.example
 
 # Testing
 coverage/
