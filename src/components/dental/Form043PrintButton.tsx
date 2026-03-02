@@ -31,8 +31,7 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
         .replace(/\{\{\s*fullName\s*\}\}/g, `${patient.lastName} ${patient.firstName} ${patient.middleName || ''}`)
         .replace(/\{\{\s*dateOfBirth\s*\}\}/g, patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString('uk-UA') : '')
         .replace(/\{\{\s*phone\s*\}\}/g, formatPhoneForDisplay(patient.phone))
-        .replace(/\{\{\s*address\s*\}\}/g, patient.address || '')
-        .replace(/\{\{\s*workplace\s*\}\}/g, patient.workplace || '');
+
 
       // Створюємо нове вікно для друку
       const printWindow = window.open('', '_blank');

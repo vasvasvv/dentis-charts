@@ -34,7 +34,7 @@ const Index = () => {
         
       }}
     />
-        <main className="flex-1 flex flex-col p-2 overflow-hidden">
+        <main className="relative z-10 flex-1 flex flex-col p-2 overflow-hidden">
           {showChart && selectedPatientId ? (
             <>
               <Button
