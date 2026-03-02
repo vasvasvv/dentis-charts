@@ -24,8 +24,16 @@ const Index = () => {
   // Mobile: show patient list by default, dental chart when patient selected
   if (isMobile) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-background/50">
         <Header />
+ {/* Фон з напівпрозорою картинкою */}
+    <div 
+      className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15"
+      style={{
+        backgroundImage: `url(${bgImage})` 
+        
+      }}
+    />
         <main className="flex-1 flex flex-col p-2 overflow-hidden">
           {showChart && selectedPatientId ? (
             <>
