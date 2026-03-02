@@ -468,6 +468,73 @@ app.delete('/api/patients/:patientId/visits/:visitId', authMiddleware, requireRo
   return c.json({ success: true })
 })
 
+// ─── USERS ───────────────────────────────────────────────────────────────────
+//
+//  Доступ: тільки superadmin та doctor
+//  GET  /api/users   — список усіх користувачів
+//  POST /api/users   — створити нового користувача
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CAN_MANAGE_USERS = ['superadmin', 'doctor']
+
+app.get('/api/users', authMiddleware, requireRole(CAN_MANAGE_USERS), async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare(
+      `SELECT u.id, u.email, u.fullName, u.role_id, r.name as roleName
+       FROM users u
+       JOIN roles r ON u.role_id = r.id
+       ORDER BY u.id`
+    ).all()
+    return c.json(results || [])
+  } catch (error: any) {
+    return c.json({ error: 'Database error', details: error.message }, 500)
+  }
+})
+
+app.post('/api/users', authMiddleware, requireRole(CAN_MANAGE_USERS), async (c) => {
+  try {
+    const { email, password, fullName, roleId } = await c.req.json()
+
+    if (!email || !password || !fullName || !roleId) {
+      return c.json({ error: "Обов'язкові поля: email, password, fullName, roleId" }, 400)
+    }
+
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE email = ?'
+    ).bind(email).first()
+
+    if (existing) {
+      return c.json({ error: 'Користувач з таким email вже існує' }, 409)
+    }
+
+    const hashedPassword = await hashPassword(password)
+
+    const result = await c.env.DB.prepare(
+      `INSERT INTO users (email, password_hash, fullName, role_id)
+       VALUES (?, ?, ?, ?)
+       RETURNING id, email, fullName, role_id`
+    ).bind(email, hashedPassword, fullName, parseInt(roleId)).first()
+
+    const currentUser = c.get('user')
+    await c.env.DB.prepare(
+      'INSERT INTO history_logs (entity_type, entity_id, action, changed_by) VALUES (?, ?, ?, ?)'
+    ).bind('user', result.id, 'create', currentUser.id).run()
+
+    const role = await c.env.DB.prepare(
+      'SELECT name FROM roles WHERE id = ?'
+    ).bind(parseInt(roleId)).first()
+
+    return c.json({
+      message: 'Користувача успішно створено',
+      user: { ...result, roleName: (role as any)?.name },
+    }, 201)
+
+  } catch (error: any) {
+    return c.json({ error: 'Internal Server Error', details: error.message }, 500)
+  }
+})
+
 // ─── DOCTORS ─────────────────────────────────────────────────────────────────
 
 // Тільки лікарі (role_id = 2) — superadmin виключений зі списку

@@ -8,6 +8,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Stethoscope, LogOut, User, Shield } from 'lucide-react';
 import logoSrc from '@/assets/logo.png';
+import { useState } from 'react';
+import { AddUserModal } from '@/components/AddUserModal';
+import { UserPlus } from 'lucide-react';
 
 export function Header() {
   const {
@@ -41,6 +44,7 @@ export function Header() {
     };
   };
   const roleInfo = currentUser ? getRoleBadge(currentUser.role) : null;
+  const [addUserOpen, setAddUserOpen] = useState(false);
   return <header className="header-gradient text-primary-foreground shadow-lg">
       <div className="flex items-center justify-between h-18 md:h-18 px-3 md:px-6 text-destructive-foreground bg-[#137a7c]">
         <div className="flex items-center gap-2 md:gap-4">
@@ -89,6 +93,10 @@ export function Header() {
                   <User className="w-4 h-4" />
                   Профіль
                 </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2" onClick={() => setAddUserOpen(true)}>
+  <UserPlus className="w-4 h-4" />
+  Додати користувача
+</DropdownMenuItem>
                 <DropdownMenuItem className="gap-2">
                   <Shield className="w-4 h-4" />
                   <div className="flex items-center justify-between flex-1">
@@ -105,5 +113,6 @@ export function Header() {
             </DropdownMenu>}
         </div>
       </div>
+      <AddUserModal open={addUserOpen} onOpenChange={setAddUserOpen} />
     </header>;
 }

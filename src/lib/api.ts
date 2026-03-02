@@ -1,17 +1,12 @@
 // API Configuration
-// Change this URL when deploying to a different environment
-
 const API_URLS = {
   production: 'https://dentis-cards-api.nesterenkovasil9.workers.dev',
-  development: 'http://localhost:8787', // wrangler dev
+  development: 'http://localhost:8787',
 } as const;
 
-// Auto-detect environment
 const isDev = import.meta.env.DEV;
-
 export const API_URL = isDev ? API_URLS.development : API_URLS.production;
 
-// Helper for API calls
 export async function apiCall<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -40,7 +35,6 @@ export async function apiCall<T>(
   return response.json();
 }
 
-// Typed API methods
 export const api = {
   // Auth
   login: (email: string, password: string) =>
@@ -54,6 +48,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  // Users (потребує авторизації — тільки superadmin та doctor)
+  getUsers: (token: string) =>
+    apiCall<any[]>('/api/users', {}, token),
+
+  createUser: (
+    data: { email: string; password: string; fullName: string; roleId: number },
+    token: string
+  ) =>
+    apiCall<{ message: string; user: any }>('/api/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, token),
 
   // Patients
   getPatients: (token: string) =>
