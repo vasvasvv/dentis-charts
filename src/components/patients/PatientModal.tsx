@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useClinic } from '@/context/ClinicContext';
-import { useAuth } from '@/context/AuthContext';
 
 interface PatientModalProps {
   isOpen: boolean;
@@ -36,8 +35,7 @@ export function formatPhoneForDisplay(phone: string): string {
 }
 
 export function PatientModal({ isOpen, onClose, patientId }: PatientModalProps) {
-  const { patients, selectedDoctorId, doctors, addPatient, updatePatient, addHistoryEntry } = useClinic();
-  const { currentUser } = useAuth();
+  const { patients, selectedDoctorId, doctors, addPatient, updatePatient } = useClinic();
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -70,7 +68,7 @@ export function PatientModal({ isOpen, onClose, patientId }: PatientModalProps) 
     }
   }, [existingPatient, isOpen, selectedDoctorId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!doctorId) return;
@@ -89,7 +87,7 @@ export function PatientModal({ isOpen, onClose, patientId }: PatientModalProps) 
         if ((existingPatient.gender || '') !== gender) changes.push(`Стать: ${existingPatient.gender === 'male' ? 'Ч' : existingPatient.gender === 'female' ? 'Ж' : '—'} → ${gender === 'male' ? 'Ч' : gender === 'female' ? 'Ж' : '—'}`);
       }
 
-      updatePatient(patientId, {
+      await updatePatient(patientId, {
         firstName,
         lastName,
         middleName,
@@ -97,19 +95,10 @@ export function PatientModal({ isOpen, onClose, patientId }: PatientModalProps) 
         phone: formattedPhone,
         dateOfBirth,
         doctorId,
+        historyDetails: changes.length > 0 ? changes.join('; ') : undefined,
       });
-
-      if (changes.length > 0) {
-        addHistoryEntry(patientId, {
-          userId: currentUser?.id || '',
-          userName: currentUser?.name || 'Невідомий',
-          action: 'edit',
-          target: 'patient',
-          details: changes.join('; '),
-        });
-      }
     } else {
-      addPatient({
+      await addPatient({
         firstName,
         lastName,
         middleName,
