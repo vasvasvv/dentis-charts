@@ -28,13 +28,14 @@ const Index = () => {
         <Header />
  {/* Фон з напівпрозорою картинкою */}
     <div 
-      className="absolute fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15 mt-18"
+      className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15 mt-18"
       style={{
         backgroundImage: `url(${bgImage})` 
         
       }}
     />
-        <main className="relative z-10 flex-1 flex flex-col p-2 overflow-hidden">
+    <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
+        <main className=" flex-1 flex flex-col p-2 overflow-hidden">
           {showChart && selectedPatientId ? (
             <>
               <Button
@@ -53,6 +54,7 @@ const Index = () => {
           )}
         </main>
       </div>
+      </div>
     );
   }
 
@@ -67,10 +69,12 @@ const Index = () => {
         
       }}
     />
+     <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
       <main className="flex-1 flex flex-col md:flex-row p-2 md:p-4 gap-2 md:gap-4 overflow-hidden"> 
             <PatientList />          
             <DentalChart />     
       </main>
+    </div>
     </div>
   );
 };

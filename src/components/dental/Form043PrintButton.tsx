@@ -17,7 +17,7 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
     return null;
   }
 
-  const handlePrint = async () => {
+ const handlePrint = async () => {
     try {
       // Завантажуємо HTML файл з формою 043
       const response = await fetch('/src/assets/f043.html');
@@ -38,6 +38,7 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
 
       if (printWindow) {
         printWindow.document.write(filledHtmlContent);
+
         printWindow.document.close();
 
         // Чекаємо, поки контент завантажиться, і викликаємо друк

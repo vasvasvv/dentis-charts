@@ -1,7 +1,8 @@
---- .gitignore (原始)
-```
-# Dependencies
-node_modules/
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
 
 # Build outputs
 dist/
@@ -9,68 +10,7 @@ build/
 target/
 
 # Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-.ENV
-.ENV.*
-.python-version
-.pytest_cache/
-.mypy_cache/
-.coverage
-coverage/
 
-# Logs
-*.log
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-Thumbs.db:encryptable
-
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Environment variables
-.env
-.env.local
-.env.*
-!.env.example
-.dev.vars.example
-
-# Testing
-coverage/
-htmlcov/
-.nyc_output/
-istanbul/
-```
-
-+++ .gitignore (修改后)
-```
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-dist/
-build/
-target/
-
-# Dependencies
 .venv/
 venv/
 node_modules/
@@ -84,6 +24,7 @@ htmlcov/
 
 # Logs and temp files
 *.log
+
 *.tmp
 *.swp
 *.swo
@@ -126,4 +67,6 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-```
+
+
+.dev.vars.example

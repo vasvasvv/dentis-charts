@@ -45,7 +45,7 @@ export function Header() {
   };
   const roleInfo = currentUser ? getRoleBadge(currentUser.role) : null;
   const [addUserOpen, setAddUserOpen] = useState(false);
-  return <header className="header-gradient text-primary-foreground shadow-lg">
+  return <header className="header-gradient text-primary-foreground shadow-lg sticky top-0 z-50">
       <div className="flex items-center justify-between h-18 md:h-18 px-3 md:px-6 text-destructive-foreground bg-[#137a7c]">
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-2 md:gap-3">
