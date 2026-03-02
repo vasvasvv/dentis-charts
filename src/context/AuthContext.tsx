@@ -72,11 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       'doctor': {
         patient: ['add', 'edit', 'delete'],
         dental: ['add', 'edit', 'delete'],
-        user: [],
+        user: ['add', 'edit', 'delete'],
       },
-      'administrator': {
+      'admin': {
         patient: ['add', 'edit'],
-        dental: [],
+        dental: ['add', 'edit'],
         user: [],
       },
     };

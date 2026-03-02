@@ -33,7 +33,7 @@ export function Header() {
         label: 'Лікар',
         variant: 'secondary'
       },
-      'administrator': {
+      'admin': {
         label: 'Адміністратор',
         variant: 'outline'
       }
