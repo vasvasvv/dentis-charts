@@ -9,7 +9,7 @@ interface Form043PrintButtonProps {
 }
 
 export function Form043PrintButton({ className }: Form043PrintButtonProps) {
-  const { selectedPatientId, patients } = useClinic();
+  const { selectedPatientId, patients, doctors } = useClinic();
 
   const patient = patients.find(p => p.id === selectedPatientId);
 
@@ -17,41 +17,102 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
     return null;
   }
 
- const handlePrint = async () => {
+  const handlePrint = async () => {
     try {
-      // Завантажуємо HTML файл з формою 043
+      // Завантажуємо HTML шаблон форми 043
       const response = await fetch('/src/assets/f043.html');
+      if (!response.ok) {
+        throw new Error(`Не вдалося завантажити шаблон: ${response.status}`);
+      }
       const htmlContent = await response.text();
 
-      // Заповнюємо шаблон даними пацієнта
-      const filledHtmlContent = htmlContent
+      // Поточна дата та рік
+      const today = new Date();
+      const currentYear = today.getFullYear().toString();
+      const todayFormatted = today.toLocaleDateString('uk-UA', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+
+      // ПІБ лікаря прив'язаного до пацієнта
+
+
+      // Повне ПІБ пацієнта
+      const patientFullName =
+        `${patient.lastName} ${patient.firstName} ${patient.middleName || ''}`.trim();
+
+      // Дата народження
+      const dateOfBirth = patient.dateOfBirth
+        ? new Date(patient.dateOfBirth).toLocaleDateString('uk-UA')
+        : '';
+
+      // Адреса
+     
+
+      // Телефон
+      const phone = formatPhoneForDisplay(patient.phone);
+
+      // Номер картки (id або cardNumber пацієнта)
+    
+
+      // Заповнення шаблону
+      let filled = htmlContent
+        // ПІБ пацієнта
+        .replace(/\{\{\s*fullName\s*\}\}/g, patientFullName)
         .replace(/\{\{\s*lastName\s*\}\}/g, patient.lastName || '')
         .replace(/\{\{\s*firstName\s*\}\}/g, patient.firstName || '')
         .replace(/\{\{\s*middleName\s*\}\}/g, patient.middleName || '')
-        .replace(/\{\{\s*fullName\s*\}\}/g, `${patient.lastName} ${patient.firstName} ${patient.middleName || ''}`)
-        .replace(/\{\{\s*dateOfBirth\s*\}\}/g, patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString('uk-UA') : '')
-        .replace(/\{\{\s*phone\s*\}\}/g, formatPhoneForDisplay(patient.phone))
 
+        // Дата народження
+        .replace(/\{\{\s*dateOfBirth\s*\}\}/g, dateOfBirth)
 
-      // Створюємо нове вікно для друку
+        // Адреса та телефон
+        
+        .replace(/\{\{\s*phone\s*\}\}/g, phone)
+
+        // Рік (рядок "____р." у шаблоні)
+        .replace(/_{4}р\./g, `${currentYear}р.`)
+
+        // Номер картки (рядок "№_____" у шаблоні)
+       
+
+        // Лікар (рядок "Лікар ____________…" — замінюємо підкреслення після слова "Лікар ")
+    
+
+        // Сьогоднішня дата де є шаблонний тег (якщо є)
+        .replace(/\{\{\s*today\s*\}\}/g, todayFormatted)
+        .replace(/\{\{\s*currentYear\s*\}\}/g, currentYear);
+
+      // Відкриваємо нове вікно та друкуємо
       const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        alert('Браузер заблокував відкриття нового вікна. Дозвольте pop-up для цього сайту.');
+        return;
+      }
 
-      if (printWindow) {
-        printWindow.document.write(filledHtmlContent);
+      printWindow.document.open();
+      printWindow.document.write(filled);
+      printWindow.document.close();
 
-        printWindow.document.close();
+      // Чекаємо завантаження ресурсів (зображень, стилів) і тільки тоді друкуємо
+      printWindow.addEventListener('load', () => {
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+        }, 300);
+      });
 
-        // Чекаємо, поки контент завантажиться, і викликаємо друк
-        printWindow.onload = () => {
-          printWindow.focus();
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
-        };
+      // Резервний варіант якщо подія load вже відбулась
+      if (printWindow.document.readyState === 'complete') {
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
       }
     } catch (error) {
-      console.error('Error loading PDF template:', error);
-      alert('Помилка завантаження шаблону форми 043/О');
+      console.error('Помилка завантаження шаблону форми 043:', error);
+      alert('Помилка завантаження шаблону форми 043/О. Перевірте консоль для деталей.');
     }
   };
 
@@ -59,7 +120,7 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
     <Button
       onClick={handlePrint}
       className={className}
-      title="Роздрукувати форму 043/О - Стоматологічну амбулаторну карту"
+      title="Роздрукувати форму 043/О — Стоматологічну амбулаторну карту"
     >
       <Printer className="w-4 h-4 mr-2" />
       Роздрукувати
