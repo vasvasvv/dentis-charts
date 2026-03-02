@@ -89,6 +89,61 @@ type Variables = {
   user: { id: number; email: string; role: string; exp: number }
 }
 
+type HistoryLogRow = {
+  id: number
+  entity_type: 'patient' | 'tooth' | 'visit'
+  action: 'create' | 'update' | 'delete'
+  changes: string | null
+  changed_by: number
+  changed_at: string
+  userName: string | null
+}
+
+function mapHistoryAction(action: 'create' | 'update' | 'delete'): 'create' | 'edit' | 'delete' {
+  return action === 'update' ? 'edit' : action
+}
+
+function buildHistoryDetails(log: HistoryLogRow): string {
+  if (log.changes) {
+    try {
+      const parsed = JSON.parse(log.changes)
+      if (typeof parsed?.details === 'string' && parsed.details.trim().length > 0) {
+        return parsed.details
+      }
+    } catch {
+      // ignore invalid JSON and fall back to generic text
+    }
+  }
+
+  const targetLabel = log.entity_type === 'patient' ? 'Пацієнт' : log.entity_type === 'tooth' ? 'Зубна карта' : 'Візит'
+  const actionLabel = log.action === 'create' ? 'створено' : log.action === 'update' ? 'оновлено' : 'видалено'
+  return `${targetLabel}: ${actionLabel}`
+}
+
+async function getPatientHistory(db: D1Database, patientId: number | string) {
+  const { results } = await db.prepare(
+    `SELECT h.id, h.entity_type, h.action, h.changes, h.changed_by, h.changed_at, u.fullName as userName
+     FROM history_logs h
+     LEFT JOIN users u ON u.id = h.changed_by
+     LEFT JOIN tooth_data td ON h.entity_type = 'tooth' AND td.id = h.entity_id
+     LEFT JOIN visits v ON h.entity_type = 'visit' AND v.id = h.entity_id
+     WHERE (h.entity_type = 'patient' AND h.entity_id = ?)
+        OR (h.entity_type = 'tooth' AND td.patient_id = ?)
+        OR (h.entity_type = 'visit' AND v.patient_id = ?)
+     ORDER BY h.changed_at DESC`
+  ).bind(patientId, patientId, patientId).all<HistoryLogRow>()
+
+  return (results || []).map((log) => ({
+    id: log.id.toString(),
+    timestamp: new Date(log.changed_at).toISOString(),
+    userId: log.changed_by?.toString() || '',
+    userName: log.userName || 'Невідомий',
+    action: mapHistoryAction(log.action),
+    target: log.entity_type,
+    details: buildHistoryDetails(log),
+  }))
+}
+
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 app.use(
@@ -218,6 +273,8 @@ app.get('/api/patients', authMiddleware, requireRole(CAN_READ), async (c) => {
           'SELECT * FROM tooth_data WHERE patient_id = ?'
         ).bind(patient.id).all()
 
+        const changeHistory = await getPatientHistory(c.env.DB, patient.id)
+
         return {
           ...patient,
           visits: visits || [],
@@ -227,6 +284,7 @@ app.get('/api/patients', authMiddleware, requireRole(CAN_READ), async (c) => {
             notes: t.notes,
             updatedAt: t.updated_at,
           })),
+          changeHistory,
         }
       })
     )
@@ -252,6 +310,8 @@ app.get('/api/patients/:id', authMiddleware, requireRole(CAN_READ), async (c) =>
       'SELECT * FROM tooth_data WHERE patient_id = ?'
     ).bind(patientId).all()
 
+    const changeHistory = await getPatientHistory(c.env.DB, patientId)
+
     return c.json({
       ...patient,
       visits: visits || [],
@@ -261,6 +321,7 @@ app.get('/api/patients/:id', authMiddleware, requireRole(CAN_READ), async (c) =>
         notes: t.notes,
         updatedAt: t.updated_at,
       })),
+      changeHistory,
     })
   } catch (error: any) {
     return c.json({ error: 'Database error', details: error.message }, 500)
@@ -287,15 +348,15 @@ app.put('/api/patients/:id', authMiddleware, requireRole(CAN_UPDATE), async (c) 
   const user = c.get('user')
   const patientId = c.req.param('id')
   const data = await c.req.json()
-  const { firstName, lastName, middleName, gender, dateOfBirth, phone, email, address, notes, doctorId } = data
+  const { firstName, lastName, middleName, gender, dateOfBirth, phone, email, address, notes, doctorId, historyDetails } = data
 
   const result = await c.env.DB.prepare(
     'UPDATE patients SET firstName = ?, lastName = ?, middleName = ?, gender = ?, dateOfBirth = ?, phone = ?, email = ?, address = ?, notes = ?, doctor_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *'
   ).bind(firstName, lastName, middleName || null, gender || null, dateOfBirth, phone, email, address, notes, doctorId, patientId).first()
 
   await c.env.DB.prepare(
-    'INSERT INTO history_logs (entity_type, entity_id, action, changed_by) VALUES (?, ?, ?, ?)'
-  ).bind('patient', patientId, 'update', user.id).run()
+    'INSERT INTO history_logs (entity_type, entity_id, action, changes, changed_by) VALUES (?, ?, ?, ?, ?)'
+  ).bind('patient', patientId, 'update', historyDetails ? JSON.stringify({ details: historyDetails }) : null, user.id).run()
 
   return c.json(result)
 })

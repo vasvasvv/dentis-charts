@@ -12,8 +12,8 @@ import { User, Calendar } from 'lucide-react';
 import { formatPhoneForDisplay } from '@/components/patients/PatientModal';
 
 export function DentalChart() {
-  const { patients, selectedPatientId, updateToothRecord, addHistoryEntry } = useClinic();
-  const { canPerformAction, currentUser } = useAuth();
+  const { patients, selectedPatientId, updateToothRecord } = useClinic();
+  const { canPerformAction } = useAuth();
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   
   const patient = patients.find(p => p.id === selectedPatientId);
@@ -45,13 +45,6 @@ export function DentalChart() {
   const handleSaveRecord = (record: Partial<ToothRecord>) => {
     if (selectedTooth !== null) {
       updateToothRecord(patient.id, selectedTooth, record);
-      addHistoryEntry(patient.id, {
-        userId: currentUser?.id || '',
-        userName: currentUser?.name || 'Невідомий',
-        action: 'edit',
-        target: 'tooth',
-        details: `Зуб №${selectedTooth}: ${record.description || 'оновлено'}`,
-      });
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { Patient, Doctor, ToothRecord, Visit, ChangeHistoryEntry } from '@/types/dental';
+import { Patient, Doctor, ToothRecord, Visit } from '@/types/dental';
 import { useAuth } from './AuthContext';
 
 interface ClinicContextType {
@@ -20,7 +20,6 @@ interface ClinicContextType {
   getPatients: () => Promise<void>;
   getPatientDetails: (id: string) => Promise<void>;
   getPatientsByDoctor: (doctorId: string) => Patient[];
-  addHistoryEntry: (patientId: string, entry: any) => void;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://dentis-cards-api.nesterenkovasil9.workers.dev';
@@ -170,6 +169,7 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
         address: patientData.address ?? null,
         notes: patientData.notes ?? null,
         doctorId: patientData.doctorId ?? existing?.doctorId,
+        historyDetails: patientData.historyDetails ?? null,
       })
     });
     await getPatients();
@@ -187,21 +187,6 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
   const getPatientsByDoctor = useCallback((doctorId: string) => {
     return patients.filter(p => p.doctorId === doctorId);
   }, [patients]);
-
-  const addHistoryEntry = useCallback((patientId: string, entry: any) => {
-    setPatients(prev => prev.map(p => {
-      if (p.id === patientId) {
-        return {
-          ...p,
-          changeHistory: [
-            { id: Date.now().toString(), timestamp: new Date().toISOString(), ...entry },
-            ...p.changeHistory
-          ]
-        };
-      }
-      return p;
-    }));
-  }, []);
 
   // ── Візити ────────────────────────────────────────────────────────────────
 
@@ -298,7 +283,6 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
       getPatients,
       getPatientDetails: async () => {},
       getPatientsByDoctor,
-      addHistoryEntry,
     }}>
       {children}
     </ClinicContext.Provider>
