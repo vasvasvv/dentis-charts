@@ -26,7 +26,7 @@ const Index = () => {
       <div className="min-h-screen flex flex-col bg-background/50">
         <Header />
         <div
-          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15"
+          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-30"
           style={{ backgroundImage: `url(${bgImage})` }}
         />
         <div className="relative min-h-screen flex flex-col bg-background/30 backdrop-blur-sm">
