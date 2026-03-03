@@ -23,13 +23,13 @@ const Index = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen flex flex-col bg-background/30">
+      <div className="min-h-screen flex flex-col">
         <Header />
         <div
           className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-30"
           style={{ backgroundImage: `url(${bgImage})` }}
         />
-        <div className="relative min-h-screen flex flex-col bg-background/30">
+        <div className="relative min-h-screen flex flex-col bg-background/50">
           <main className="flex-1 flex flex-col p-2 overflow-hidden">
             {showChart && selectedPatientId ? (
               <>
@@ -54,14 +54,14 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background/50">
+    <div className="min-h-screen flex flex-col">
       <Header />
       {/* fixed — картинка залишається на місці при скролі */}
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15"
         style={{ backgroundImage: `url(${bgImage})` }}
-      />
-      <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
+      />0
+      <div className="relative min-h-screen flex flex-col bg-background/30 backdrop-blur-sm">
         <main className="flex-1 flex flex-col md:flex-row p-2 md:p-4 gap-2 md:gap-4 overflow-hidden">
           <PatientList />
           <DentalChart />
