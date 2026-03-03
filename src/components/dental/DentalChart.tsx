@@ -51,7 +51,7 @@ export function DentalChart() {
   const issueCount = patient.dentalChart.filter(t => t.description || t.notes || t.files.length > 0).length;
 
   return (
-    <Card className="rounded-lg border text-card-foreground shadow-sm flex-1 overflow-hidden animate-fade-in bg-muted/5">
+    <Card className="rounded-lg border text-card-foreground shadow-sm flex-1 overflow-hidden animate-fade-in bg-background/50 backdrop-blur-sm">
                    
       <CardHeader className="border-b bg-card/80 p-3 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">

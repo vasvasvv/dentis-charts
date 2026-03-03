@@ -113,7 +113,7 @@ export function PatientList({ onPatientSelect }: PatientListProps) {
   };
 
   return (
-    <Card className="rounded-lg text-card-foreground w-full md:w-80 flex flex-col h-full animate-slide-in border-0 md:border shadow-none md:shadow-sm bg-muted/10">
+    <Card className="rounded-lg text-card-foreground w-full md:w-80 flex flex-col h-full animate-slide-in border-0 md:border shadow-none md:shadow-sm bg-background/50 backdrop-blur-sm">
       <CardHeader className="border-b shrink-0">
         <div className="flex flex-col-reverse md:flex-row items-stretch md:items-center justify-between gap-2 md:gap-0 mb-3">
           <CardTitle className="font-heading text-lg order-2 md:order-1">Пацієнти</CardTitle>
