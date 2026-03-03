@@ -26,6 +26,9 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
     const today = new Date();
     const currentYear = today.getFullYear().toString();
 
+    // ПІБ лікаря, прив'язаного до пацієнта
+    const doctor = doctors?.find(d => d.id === patient.doctorId);
+    const doctorFullName = doctor?.name ?? '';
 
     // Повне ПІБ пацієнта
     const patientFullName =
@@ -37,11 +40,11 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
       : '';
 
     // Адреса та телефон
-
+    
     const phone = formatPhoneForDisplay(patient.phone);
 
     // Номер картки
-
+    const cardNumber = Math.floor(Math.random() * (8790 - 4560 + 1)) + 4560;
 
     // Заповнення шаблону
     const filled = htmlTemplate
@@ -52,7 +55,8 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
       .replace(/\{\{\s*dateOfBirth\s*\}\}/g, dateOfBirth)
       .replace(/\{\{\s*phone\s*\}\}/g, phone)
       .replace(/_{4}р\./g, `${currentYear}р.`)
-
+      .replace(/№_____/g, `№${cardNumber}`)
+      .replace(/Лікар\s*_{10,}/g, `Лікар ${doctorFullName}`);
 
     // Відкриваємо нове вікно та вставляємо заповнений HTML
     const printWindow = window.open('', '_blank');
