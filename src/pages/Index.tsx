@@ -23,7 +23,7 @@ const Index = () => {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen flex flex-col bg-background/50">
+      <div className="min-h-screen flex flex-col bg-background/30">
         <Header />
         <div
           className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-30"
