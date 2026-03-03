@@ -8,7 +8,8 @@ import { DentalChart } from '@/components/dental/DentalChart';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import bgImage from '@/assets/back.jpg';
+import bgImage from '@/assets/bgcharts.png';
+import bgImagem from '@/assets/bgchartsm.png';
 
 
 const Index = () => {
@@ -26,10 +27,10 @@ const Index = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div
-          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-30"
-          style={{ backgroundImage: `url(${bgImage})` }}
+          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none"
+          style={{ backgroundImage: `url(${bgImagem})` }}
         />
-        <div className="relative min-h-screen flex flex-col bg-background/50">
+        <div className="relative min-h-screen flex flex-col">
           <main className="flex-1 flex flex-col p-2 overflow-hidden">
             {showChart && selectedPatientId ? (
               <>
@@ -58,9 +59,9 @@ const Index = () => {
       <Header />
       {/* fixed — картинка залишається на місці при скролі */}
       <div
-        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-30"
+        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none"
         style={{ backgroundImage: `url(${bgImage})` }}
-      />0
+      />
       <div className="relative min-h-screen flex flex-col ">
         <main className="flex-1 flex flex-col md:flex-row p-2 md:p-4 gap-2 md:gap-4 overflow-hidden">
           <PatientList />
