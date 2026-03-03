@@ -21,60 +21,52 @@ const Index = () => {
     return <LoginPage />;
   }
 
-  // Mobile: show patient list by default, dental chart when patient selected
   if (isMobile) {
     return (
       <div className="min-h-screen flex flex-col bg-background/50">
         <Header />
- {/* Фон з напівпрозорою картинкою */}
-    <div 
-      className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15 mt-18"
-      style={{
-        backgroundImage: `url(${bgImage})` 
-        
-      }}
-    />
-    <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
-        <main className=" flex-1 flex flex-col p-2 overflow-hidden">
-          {showChart && selectedPatientId ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mb-2 self-start"
-                onClick={() => setShowChart(false)}
-              >
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Список пацієнтів
-              </Button>
-              <DentalChart />
-            </>
-          ) : (
-            <PatientList onPatientSelect={() => setShowChart(true)} />
-          )}
-        </main>
-      </div>
+        <div
+          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
+        <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
+          <main className="flex-1 flex flex-col p-2 overflow-hidden">
+            {showChart && selectedPatientId ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mb-2 self-start"
+                  onClick={() => setShowChart(false)}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Список пацієнтів
+                </Button>
+                <DentalChart />
+              </>
+            ) : (
+              <PatientList onPatientSelect={() => setShowChart(true)} />
+            )}
+          </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background/50">    
+    <div className="min-h-screen flex flex-col bg-background/50">
       <Header />
-      {/* Фон з напівпрозорою картинкою */}
-    <div 
-      className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15"
-      style={{
-        backgroundImage: `url(${bgImage})` 
-        
-      }}
-    />
-     <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
-      <main className="flex-1 flex flex-col md:flex-row p-2 md:p-4 gap-2 md:gap-4 overflow-hidden"> 
-            <PatientList />          
-            <DentalChart />     
-      </main>
-    </div>
+      {/* fixed — картинка залишається на місці при скролі */}
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15"
+        style={{ backgroundImage: `url(${bgImage})` }}
+      />
+      <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
+        <main className="flex-1 flex flex-col md:flex-row p-2 md:p-4 gap-2 md:gap-4 overflow-hidden">
+          <PatientList />
+          <DentalChart />
+        </main>
+      </div>
     </div>
   );
 };
