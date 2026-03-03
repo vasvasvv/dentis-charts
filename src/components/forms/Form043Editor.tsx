@@ -9,6 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { X, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
+import img1 from '@/assets/target001.png';
+import img2 from '@/assets/target002.png';
+import img3 from '@/assets/target003.png';
+import img4 from '@/assets/target004.png';
+import img5 from '@/assets/target005.png';
+import img6 from '@/assets/target006.png';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -77,7 +83,14 @@ function buildHTML(f: FormData): string {
 
   const fillCell = (top: number, left: number, value: string) => {
     if (!value) return;
-    html = html.replace(
+    html = html
+    .replace(/src="target001\.png"/g, `src="${img1}"`)
+    .replace(/src="target002\.png"/g, `src="${img2}"`)
+    .replace(/src="target003\.png"/g, `src="${img3}"`)
+    .replace(/src="target004\.png"/g, `src="${img4}"`)
+    .replace(/src="target005\.png"/g, `src="${img5}"`)
+    .replace(/src="target006\.png"/g, `src="${img6}"`)
+    .replace(
       new RegExp(`(<p style="position:absolute;top:${top}px;left:${left}px[^>]*>)\\s*&#160;\\s*(<\\/p>)`),
       `$1${value}$2`
     );
@@ -499,18 +512,18 @@ export function Form043Editor({ onClose }: Props) {
           <span className="text-[11px] text-slate-400">Оновлюється автоматично</span>
         </div>
 
-        <div className="flex-1 overflow-auto p-6 flex justify-center items-start">
+        <div className="flex-1 overflow-auto p-4 flex justify-start items-start">
           <iframe
             ref={iframeRef}
             className="bg-white shadow-2xl"
-            style={{
-              width: '1262px',
-              height: '892px',
-              transform: 'scale(0.68)',
-              transformOrigin: 'top center',
-              marginBottom: '-286px',
-              borderRadius: '2px',
-            }}
+style={{
+  width: '1262px',
+  height: '892px',
+  transform: 'scale(var(--preview-scale, 0.65))',
+  transformOrigin: 'top left',
+  marginBottom: '-303px',
+  marginRight: '-455px',
+}}
             title="Форма 043"
           />
         </div>
