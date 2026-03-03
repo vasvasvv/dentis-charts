@@ -8,95 +8,68 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
-import img1 from '@/assets/target001.png';
-import img2 from '@/assets/target002.png';
-import img3 from '@/assets/target003.png';
-import img4 from '@/assets/target004.png';
-import img5 from '@/assets/target005.png';
-import img6 from '@/assets/target006.png';
+import { X, Printer, ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { useBase64Images } from '@/hooks/useBase64Images';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ToothEntry {
-  numerator: string;
-  denominator: string;
-}
+interface ToothEntry { numerator: string; denominator: string; }
 
 interface FormData {
-  cardNumber: string;
-  year: string;
-  fullName: string;
-  gender: string;
+  cardNumber: string; year: string; fullName: string; gender: string;
   dobD1: string; dobD2: string; dobM1: string; dobM2: string; dobY1: string; dobY2: string;
-  phone: string;
-  diagnoz: string;
-  skargy: string;
-  pereneseni: string;
-  rozvytok: string;
-  daniOglyadu: string;
-  teeth: Record<number, ToothEntry>;
-  toothNotes: string;
-  prykus: string;
-  stanGigieny: string;
-  daniRentgen: string;
-  kolirvita: string;
-  navchannya: string;
-  kontrolGigieny: string;
+  phone: string; diagnoz: string; skargy: string; pereneseni: string; rozvytok: string;
+  daniOglyadu: string; teeth: Record<number, ToothEntry>; toothNotes: string;
+  prykus: string; stanGigieny: string; daniRentgen: string;
+  kolirvita: string; navchannya: string; kontrolGigieny: string;
   journal: Array<{ date: string; note: string }>;
-  planObstezhenny: string[];
-  planLikuvannya: string[];
-  likar: string;
-  zavViddil: string;
+  planObstezhenny: string[]; planLikuvannya: string[];
+  likar: string; zavViddil: string;
 }
 
 // ─── Tooth layout ─────────────────────────────────────────────────────────────
 
-const UPPER_TEETH = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
-const LOWER_TEETH = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const UPPER_TEETH       = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const LOWER_TEETH       = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 const TOOTH_LEFTS_UPPER = [128,274,331,388,445,503,560,617,674,731,789,846,903,960,1018,1075];
 const TOOTH_LEFTS_LOWER = [128,293,351,408,465,523,580,637,694,751,808,866,923,980,1037,1095];
 
 function statusToCode(s: string): string {
   if (!s) return '';
   const l = s.toLowerCase().trim();
-  if (l.includes('карієс') || l === 'c') return 'C';
-  if (l.includes('пульпіт') || l === 'p') return 'P';
-  if (l.includes('періодонтит') || l === 'pt') return 'Pt';
-  if (l.includes('відсутн') || l === 'a') return 'A';
-  if (l.includes('корінь') || l === 'r') return 'R';
-  if (l.includes('коронка') || l === 'cd') return 'Cd';
-  if (l.includes('пломба') || l === 'pl') return 'Pl';
-  if (l.includes('фасетка') || l === 'f') return 'F';
-  if (l.includes('штучний') || l === 'ar') return 'ar';
-  if (l.includes('реставрація')) return 'r';
-  if (l.includes('штифт') || l === 'pin') return 'pin';
-  if (l.includes('імплант') || l === 'i') return 'I';
-  if (l.includes('камінь') || l === 'dc') return 'Dc';
+  if (l.includes('карієс')      || l === 'c')   return 'C';
+  if (l.includes('пульпіт')     || l === 'p')   return 'P';
+  if (l.includes('періодонтит') || l === 'pt')  return 'Pt';
+  if (l.includes('відсутн')     || l === 'a')   return 'A';
+  if (l.includes('корінь')      || l === 'r')   return 'R';
+  if (l.includes('коронка')     || l === 'cd')  return 'Cd';
+  if (l.includes('пломба')      || l === 'pl')  return 'Pl';
+  if (l.includes('фасетка')     || l === 'f')   return 'F';
+  if (l.includes('штучний')     || l === 'ar')  return 'ar';
+  if (l.includes('реставрація'))                return 'r';
+  if (l.includes('штифт')       || l === 'pin') return 'pin';
+  if (l.includes('імплант')     || l === 'i')   return 'I';
+  if (l.includes('камінь')      || l === 'dc')  return 'Dc';
   return s;
 }
 
 // ─── HTML builder ─────────────────────────────────────────────────────────────
 
-function buildHTML(f: FormData): string {
+function buildHTML(f: FormData, imgs: string[]): string {
   let html = htmlTemplate;
+
+  imgs.forEach((b64, i) => {
+    html = html.replace(new RegExp(`src="target00${i+1}\\.png"`, 'g'), `src="${b64}"`);
+  });
 
   const fillCell = (top: number, left: number, value: string) => {
     if (!value) return;
-    html = html
-    .replace(/src="target001\.png"/g, `src="${img1}"`)
-    .replace(/src="target002\.png"/g, `src="${img2}"`)
-    .replace(/src="target003\.png"/g, `src="${img3}"`)
-    .replace(/src="target004\.png"/g, `src="${img4}"`)
-    .replace(/src="target005\.png"/g, `src="${img5}"`)
-    .replace(/src="target006\.png"/g, `src="${img6}"`)
-    .replace(
+    html = html.replace(
       new RegExp(`(<p style="position:absolute;top:${top}px;left:${left}px[^>]*>)\\s*&#160;\\s*(<\\/p>)`),
       `$1${value}$2`
     );
   };
 
-  // Page 1
   html = html.replace(/№_____/, `№${f.cardNumber}`);
   html = html.replace(/_{4}р\./, `${f.year}р.`);
   fillCell(311, 772, f.fullName);
@@ -112,7 +85,6 @@ function buildHTML(f: FormData): string {
   fillCell(607, 424, f.pereneseni);
   fillCell(710, 434, f.rozvytok);
 
-  // Page 2
   fillCell(140, 128, f.daniOglyadu);
   UPPER_TEETH.forEach((num, i) => {
     const t = f.teeth[num];
@@ -126,7 +98,6 @@ function buildHTML(f: FormData): string {
   });
   fillCell(382, 128, f.toothNotes);
 
-  // Page 3
   fillCell(153, 129, f.prykus);
   fillCell(214, 129, f.stanGigieny);
   fillCell(515, 129, f.daniRentgen);
@@ -134,7 +105,6 @@ function buildHTML(f: FormData): string {
   fillCell(649, 520, f.navchannya);
   fillCell(706, 809, f.kontrolGigieny);
 
-  // Pages 4 & 5 journal
   const tops4 = [209,240,270,301,331,362,392,422,453,484,514,544,575,605,636,666,697];
   const tops5 = [188,219,249,279,310,340,371,401,432,462,493,523,553,584,614,645,675,706];
   f.journal.slice(0, tops4.length).forEach((j, i) => {
@@ -146,9 +116,9 @@ function buildHTML(f: FormData): string {
     fillCell(tops5[i], 306, j.note);
   });
 
-  html = html.replace(/Лікар\s*_{10,}/g, `Лікар ${f.likar}`);
+  // Лікар — стор. 4 і стор. 5. У шаблоні пробіл між "Лікар" і підкресленнями — це &#160;
+  html = html.replace(/Лікар[\s\u00a0]*_{10,}/g, `Лікар ${f.likar}`);
 
-  // Page 6
   const planTops = [141,171,201,230,260,289,319,348,378,408,437,467,496,526,556,585,615,644,674,704,733];
   f.planObstezhenny.slice(0, planTops.length).forEach((v, i) => fillCell(planTops[i], 129, v));
   f.planLikuvannya.slice(0, planTops.length).forEach((v, i)  => fillCell(planTops[i], 662, v));
@@ -208,22 +178,26 @@ export function Form043Editor({ onClose }: Props) {
   const { selectedPatientId, patients, doctors } = useClinic();
   const patient = patients.find(p => p.id === selectedPatientId);
 
-  const [formData, setFormData]       = useState<FormData>(() => initFromPatient(patient, doctors ?? []));
-  const [previewPage, setPreviewPage] = useState(1);
+  const [formData, setFormData]         = useState<FormData>(() => initFromPatient(patient, doctors ?? []));
+  const [previewPage, setPreviewPage]   = useState(1);
+  // On mobile the preview panel is hidden by default; user can toggle it
+  const [showPreview, setShowPreview]   = useState(false);
   const iframeRef  = useRef<HTMLIFrameElement>(null);
   const blobUrlRef = useRef<string | null>(null);
+  const images = useBase64Images();
 
   const updatePreview = useCallback(() => {
-    const html = buildHTML(formData);
+    if (!images) return;
+    const html = buildHTML(formData, images);
     if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
     const blob = new Blob([html], { type: 'text/html' });
     blobUrlRef.current = URL.createObjectURL(blob);
     if (iframeRef.current) {
       iframeRef.current.src = blobUrlRef.current + `#page${previewPage}-div`;
     }
-  }, [formData, previewPage]);
+  }, [formData, previewPage, images]);
 
-  useEffect(() => { updatePreview(); }, [formData, previewPage]);
+  useEffect(() => { updatePreview(); }, [formData, previewPage, images]);
   useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
 
   const set = (key: keyof FormData, value: any) =>
@@ -239,7 +213,8 @@ export function Form043Editor({ onClose }: Props) {
     setFormData(p => { const arr = [...p[field]]; arr[i] = val; return { ...p, [field]: arr }; });
 
   const handlePrint = () => {
-    const html = buildHTML(formData);
+    if (!images) { alert('Зображення ще завантажуються, спробуйте за секунду'); return; }
+    const html = buildHTML(formData, images);
     const w = window.open('', '_blank');
     if (!w) { alert('Дозвольте pop-up для цього сайту'); return; }
     w.document.open(); w.document.write(html); w.document.close();
@@ -247,26 +222,101 @@ export function Form043Editor({ onClose }: Props) {
     setTimeout(() => { if (w && !w.closed) { w.focus(); w.print(); } }, 1200);
   };
 
-  const inp = "h-7 text-sm border-slate-200 focus-visible:ring-1 focus-visible:ring-teal-500 rounded-md";
+  const inp = "h-8 text-sm border-slate-200 focus-visible:ring-1 focus-visible:ring-teal-500 rounded-md";
   const lbl = "text-[11px] font-medium text-slate-500 mb-0.5 block uppercase tracking-wide";
   const ta  = "text-sm border-slate-200 focus-visible:ring-1 focus-visible:ring-teal-500 min-h-[56px]";
+
+  const SCALE   = 0.62;
+  const iframeW = 1262;
+  const iframeH = 892;
+  const scaledW = Math.round(iframeW * SCALE);
+  const scaledH = Math.round(iframeH * SCALE);
+
+  // ── Preview panel (shared between mobile overlay and desktop side-by-side) ──
+  const PreviewPanel = () => (
+    <div className="flex flex-col bg-slate-200 overflow-hidden flex-1 min-w-0">
+      {/* Navbar */}
+      <div className="flex items-center justify-between px-3 py-2 bg-slate-800 text-white shrink-0 gap-2">
+        <span className="text-xs font-medium whitespace-nowrap">Стор. {previewPage}</span>
+        <div className="flex gap-0.5 items-center">
+          <button onClick={() => setPreviewPage(p => Math.max(1,p-1))} disabled={previewPage===1}
+            className="p-1 rounded hover:bg-slate-700 disabled:opacity-30 transition-colors">
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          {[1,2,3,4,5,6].map(n => (
+            <button key={n} onClick={() => setPreviewPage(n)}
+              className={`w-6 h-6 text-[11px] rounded font-semibold transition-colors ${previewPage===n ? 'bg-teal-500 text-white' : 'text-slate-300 hover:bg-slate-700'}`}>
+              {n}
+            </button>
+          ))}
+          <button onClick={() => setPreviewPage(p => Math.min(6,p+1))} disabled={previewPage===6}
+            className="p-1 rounded hover:bg-slate-700 disabled:opacity-30 transition-colors">
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        {/* Close preview on mobile */}
+        <button
+          onClick={() => setShowPreview(false)}
+          className="sm:hidden p-1 rounded hover:bg-slate-700 transition-colors ml-1">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* iframe */}
+      <div className="flex-1 overflow-auto p-3 flex items-start justify-start">
+        <div style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
+          <iframe
+            ref={iframeRef}
+            title="Форма 043"
+            style={{
+              width: iframeW,
+              height: iframeH,
+              transform: `scale(${SCALE})`,
+              transformOrigin: 'top left',
+              border: 'none',
+              borderRadius: 2,
+              boxShadow: '0 4px 32px rgba(0,0,0,0.25)',
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex bg-slate-900/80 backdrop-blur-sm">
 
-      {/* ── Left: form ── */}
-      <div className="w-[460px] flex flex-col bg-white shadow-2xl overflow-hidden border-r border-slate-100">
+      {/*
+        Layout strategy:
+        - Mobile  (<sm): form fills full width; preview slides in as a full-screen overlay
+        - Desktop (≥sm): side-by-side (440 px form + rest for preview)
+      */}
+
+      {/* ── Form panel ── */}
+      <div className={`
+        flex flex-col bg-white shadow-2xl overflow-hidden border-r border-slate-100 shrink-0
+        w-full sm:w-[440px]
+        ${showPreview ? 'hidden sm:flex' : 'flex'}
+      `}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-teal-600 text-white shrink-0">
-          <div>
-            <p className="font-semibold text-sm">Форма 043/О — редагування</p>
-            <p className="text-[11px] text-teal-200 truncate max-w-[280px] mt-0.5">{formData.fullName || 'Пацієнт'}</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-sm">Форма 043/О</p>
+            <p className="text-[11px] text-teal-200 truncate max-w-[200px] sm:max-w-[270px] mt-0.5">
+              {formData.fullName || 'Пацієнт'}
+            </p>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Button size="sm" onClick={handlePrint}
               className="h-7 px-2 text-xs bg-white text-teal-700 hover:bg-teal-50 gap-1">
-              <Printer className="w-3 h-3" /> Друк
+              <Printer className="w-3 h-3" />
+              <span className="hidden xs:inline">Друк</span>
+            </Button>
+            {/* Toggle preview — mobile only */}
+            <Button size="sm" onClick={() => setShowPreview(true)}
+              className="h-7 px-2 text-xs bg-white text-teal-700 hover:bg-teal-50 gap-1 sm:hidden">
+              <Eye className="w-3 h-3" />
             </Button>
             <button onClick={onClose} className="ml-1 p-1 rounded hover:bg-teal-700 transition-colors">
               <X className="w-4 h-4" />
@@ -276,36 +326,30 @@ export function Form043Editor({ onClose }: Props) {
 
         {/* Tabs */}
         <Tabs defaultValue="p1" className="flex flex-col flex-1 overflow-hidden">
-          <TabsList className="w-full rounded-none border-b border-slate-100 bg-slate-50 h-9 px-2 shrink-0 justify-start gap-0.5">
-            {[['p1','Стор. 1'],['p2','Зуби'],['p3','Огляд'],['p4','Щоденник'],['p6','План']].map(([v,l]) => (
-              <TabsTrigger key={v} value={v}
-                className="text-[11px] px-3 h-7 rounded data-[state=active]:bg-white data-[state=active]:text-teal-700 data-[state=active]:shadow-sm">
-                {l}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          {/* Scrollable tab bar on small screens */}
+          <div className="overflow-x-auto shrink-0 border-b border-slate-100 bg-slate-50">
+            <TabsList className="w-max min-w-full rounded-none bg-transparent h-9 px-2 justify-start gap-0.5">
+              {[['p1','Стор. 1'],['p2','Зуби'],['p3','Огляд'],['p4','Щоденник'],['p6','План']].map(([v,l]) => (
+                <TabsTrigger key={v} value={v}
+                  className="text-[11px] px-2.5 h-7 rounded whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-teal-700 data-[state=active]:shadow-sm">
+                  {l}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {/* ── Page 1 ── */}
           <TabsContent value="p1" className="flex-1 overflow-y-auto p-4 space-y-3 mt-0">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className={lbl}>Номер картки</Label>
-                <Input className={inp} value={formData.cardNumber} onChange={e => set('cardNumber', e.target.value)} />
-              </div>
-              <div>
-                <Label className={lbl}>Рік</Label>
-                <Input className={inp} value={formData.year} onChange={e => set('year', e.target.value)} />
-              </div>
+              <div><Label className={lbl}>Номер картки</Label>
+                <Input className={inp} value={formData.cardNumber} onChange={e => set('cardNumber', e.target.value)} /></div>
+              <div><Label className={lbl}>Рік</Label>
+                <Input className={inp} value={formData.year} onChange={e => set('year', e.target.value)} /></div>
             </div>
-
-            <div>
-              <Label className={lbl}>ПІБ пацієнта</Label>
-              <Input className={inp} value={formData.fullName} onChange={e => set('fullName', e.target.value)} />
-            </div>
-
+            <div><Label className={lbl}>ПІБ пацієнта</Label>
+              <Input className={inp} value={formData.fullName} onChange={e => set('fullName', e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className={lbl}>Стать</Label>
+              <div><Label className={lbl}>Стать</Label>
                 <Select value={formData.gender} onValueChange={v => set('gender', v)}>
                   <SelectTrigger className={inp}><SelectValue placeholder="—" /></SelectTrigger>
                   <SelectContent>
@@ -314,79 +358,64 @@ export function Form043Editor({ onClose }: Props) {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className={lbl}>Телефон</Label>
-                <Input className={inp} value={formData.phone} onChange={e => set('phone', e.target.value)} placeholder="+380..." />
-              </div>
             </div>
-
+            <div><Label className={lbl}>Телефон</Label>
+              <Input className={inp} value={formData.phone} onChange={e => set('phone', e.target.value)} placeholder="+380..." inputMode="tel" /></div>
             <div>
               <Label className={lbl}>Дата народження</Label>
-              <div className="flex gap-1 items-center">
+              <div className="flex flex-wrap gap-1 items-center">
                 {(['dobD1','dobD2','dobM1','dobM2','dobY1','dobY2'] as const).map((k, i) => (
                   <React.Fragment key={k}>
-                    <Input className="w-9 h-7 text-center text-sm p-0 border-slate-200" maxLength={1}
-                      value={formData[k]} onChange={e => set(k, e.target.value)} />
+                    <Input className="w-9 h-8 text-center text-sm p-0 border-slate-200" maxLength={1}
+                      value={formData[k]} onChange={e => set(k, e.target.value)} inputMode="numeric" />
                     {(i === 1 || i === 3) && <span className="text-slate-400 font-bold">.</span>}
                   </React.Fragment>
                 ))}
-                <span className="text-[10px] text-slate-400 ml-1">дд.мм.рр</span>
+                <span className="text-[10px] text-slate-400">дд.мм.рр</span>
               </div>
             </div>
-
-            <div>
-              <Label className={lbl}>Діагноз</Label>
-              <Textarea className={ta} value={formData.diagnoz} onChange={e => set('diagnoz', e.target.value)} />
-            </div>
-            <div>
-              <Label className={lbl}>Скарги</Label>
-              <Textarea className={ta} value={formData.skargy} onChange={e => set('skargy', e.target.value)} />
-            </div>
-            <div>
-              <Label className={lbl}>Перенесені та супутні захворювання</Label>
-              <Textarea className={ta} value={formData.pereneseni} onChange={e => set('pereneseni', e.target.value)} />
-            </div>
-            <div>
-              <Label className={lbl}>Розвиток теперішнього захворювання</Label>
-              <Textarea className={ta} value={formData.rozvytok} onChange={e => set('rozvytok', e.target.value)} />
-            </div>
+            <div><Label className={lbl}>Діагноз</Label>
+              <Textarea className={ta} value={formData.diagnoz} onChange={e => set('diagnoz', e.target.value)} /></div>
+            <div><Label className={lbl}>Скарги</Label>
+              <Textarea className={ta} value={formData.skargy} onChange={e => set('skargy', e.target.value)} /></div>
+            <div><Label className={lbl}>Перенесені та супутні захворювання</Label>
+              <Textarea className={ta} value={formData.pereneseni} onChange={e => set('pereneseni', e.target.value)} /></div>
+            <div><Label className={lbl}>Розвиток теперішнього захворювання</Label>
+              <Textarea className={ta} value={formData.rozvytok} onChange={e => set('rozvytok', e.target.value)} /></div>
           </TabsContent>
 
           {/* ── Page 2: Зубна карта ── */}
           <TabsContent value="p2" className="flex-1 overflow-y-auto p-4 space-y-3 mt-0">
-            <div>
-              <Label className={lbl}>Дані об'єктивного дослідження / зовнішній огляд</Label>
-              <Textarea className={ta} value={formData.daniOglyadu} onChange={e => set('daniOglyadu', e.target.value)} />
-            </div>
-
+            <div><Label className={lbl}>Дані об'єктивного дослідження / зовнішній огляд</Label>
+              <Textarea className={ta} value={formData.daniOglyadu} onChange={e => set('daniOglyadu', e.target.value)} /></div>
             <div className="bg-teal-50 border border-teal-100 rounded-lg p-2 text-[10px] text-teal-800 leading-relaxed">
               <b>Коди:</b> C-карієс · P-пульпіт · Pt-періодонтит · A-відсутній · R-корінь · Cd-коронка · Pl-пломба · F-фасетка · ar-штучний · r-реставрація · pin-штифт · I-імплантат · Dc-камінь
             </div>
-
             {[
-              { label: 'Верхня щелепа', teeth: UPPER_TEETH },
-              { label: 'Нижня щелепа', teeth: LOWER_TEETH },
-            ].map(({ label, teeth: tList }) => (
+              { label: 'Верхня щелепа', tList: UPPER_TEETH },
+              { label: 'Нижня щелепа', tList: LOWER_TEETH },
+            ].map(({ label, tList }) => (
               <div key={label}>
                 <div className="text-[11px] font-semibold text-slate-600 mb-1 uppercase tracking-wide">{label}</div>
-                <div className="overflow-x-auto">
-                  <table className="border-collapse text-[10px] w-full">
+                {/* Tooth table — horizontally scrollable */}
+                <div className="overflow-x-auto -mx-4 px-4">
+                  <table className="border-collapse text-[10px]" style={{ minWidth: 'max-content' }}>
                     <thead>
                       <tr className="bg-slate-50">
-                        <td className="border border-slate-200 px-1 py-0.5 text-slate-400 w-12 text-center">Зуб</td>
-                        {tList.map(n => <td key={n} className="border border-slate-200 w-7 text-center font-mono font-bold text-slate-700 py-0.5">{n}</td>)}
+                        <td className="border border-slate-200 px-1 py-0.5 text-slate-400 w-12 text-center sticky left-0 bg-slate-50 z-10">Зуб</td>
+                        {tList.map(n => <td key={n} className="border border-slate-200 w-8 text-center font-mono font-bold text-slate-700 py-0.5">{n}</td>)}
                       </tr>
                     </thead>
                     <tbody>
                       {(['numerator','denominator'] as const).map((field, ri) => (
                         <tr key={field}>
-                          <td className="border border-slate-200 px-1 text-slate-400 text-center text-[9px] py-0.5">
+                          <td className="border border-slate-200 px-1 text-slate-400 text-center text-[9px] py-0.5 sticky left-0 bg-white z-10 whitespace-nowrap">
                             {ri === 0 ? 'Огляд' : 'Ліку-\nвання'}
                           </td>
                           {tList.map(n => (
                             <td key={n} className="border border-slate-200 p-0">
                               <input
-                                className={`w-full text-center text-[11px] border-0 outline-none p-0.5 h-6 focus:bg-teal-50 ${ri === 0 ? 'bg-white' : 'bg-slate-50'}`}
+                                className={`w-8 text-center text-[11px] border-0 outline-none p-0.5 h-7 focus:bg-teal-50 ${ri===0?'bg-white':'bg-slate-50'}`}
                                 maxLength={4}
                                 value={formData.teeth[n]?.[field] ?? ''}
                                 onChange={e => setTooth(n, field, e.target.value)}
@@ -400,50 +429,31 @@ export function Form043Editor({ onClose }: Props) {
                 </div>
               </div>
             ))}
-
-            <div>
-              <Label className={lbl}>Додаткові дані щодо зубів (під таблицею)</Label>
-              <Textarea className={ta} value={formData.toothNotes} onChange={e => set('toothNotes', e.target.value)} />
-            </div>
+            <div><Label className={lbl}>Додаткові дані щодо зубів (під таблицею)</Label>
+              <Textarea className={ta} value={formData.toothNotes} onChange={e => set('toothNotes', e.target.value)} /></div>
           </TabsContent>
 
           {/* ── Page 3: Клінічний огляд ── */}
           <TabsContent value="p3" className="flex-1 overflow-y-auto p-4 space-y-3 mt-0">
-            <div>
-              <Label className={lbl}>Прикус</Label>
-              <Input className={inp} value={formData.prykus} onChange={e => set('prykus', e.target.value)} />
+            <div><Label className={lbl}>Прикус (тип)</Label>
+              <Input className={inp} value={formData.prykus} onChange={e => set('prykus', e.target.value)} /></div>
+            <div><Label className={lbl}>Стан гігієни, слизової, ясен, альвеолярних відростків. Індекси ГІ та РМА</Label>
+              <Textarea className={ta + ' min-h-[80px]'} value={formData.stanGigieny} onChange={e => set('stanGigieny', e.target.value)} /></div>
+            <div><Label className={lbl}>Дані рентгенівських обстежень та лабораторних досліджень</Label>
+              <Textarea className={ta + ' min-h-[80px]'} value={formData.daniRentgen} onChange={e => set('daniRentgen', e.target.value)} /></div>
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
+              <div><Label className={lbl}>Колір за шкалою "Віта"</Label>
+                <Input className={inp} value={formData.kolirvita} onChange={e => set('kolirvita', e.target.value)} /></div>
+              <div><Label className={lbl}>Навчання гігієні</Label>
+                <Input className={inp} value={formData.navchannya} onChange={e => set('navchannya', e.target.value)} /></div>
             </div>
-            <div>
-              <Label className={lbl}>Стан гігієни, слизової, ясен, альвеолярних відростків. Індекси ГІ та РМА</Label>
-              <Textarea className={ta + ' min-h-[80px]'} value={formData.stanGigieny} onChange={e => set('stanGigieny', e.target.value)} />
-            </div>
-            <div>
-              <Label className={lbl}>Дані рентгенівських обстежень та лабораторних досліджень</Label>
-              <Textarea className={ta + ' min-h-[80px]'} value={formData.daniRentgen} onChange={e => set('daniRentgen', e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className={lbl}>Колір за шкалою "Віта"</Label>
-                <Input className={inp} value={formData.kolirvita} onChange={e => set('kolirvita', e.target.value)} />
-              </div>
-              <div>
-                <Label className={lbl}>Навчання гігієні</Label>
-                <Input className={inp} value={formData.navchannya} onChange={e => set('navchannya', e.target.value)} />
-              </div>
-            </div>
-            <div>
-              <Label className={lbl}>Дата контролю гігієни порожнини рота</Label>
-              <Input className={inp} value={formData.kontrolGigieny} onChange={e => set('kontrolGigieny', e.target.value)} />
-            </div>
-            <div className="border-t border-slate-100 pt-3 grid grid-cols-2 gap-3">
-              <div>
-                <Label className={lbl}>Лікар (підпис)</Label>
-                <Input className={inp} value={formData.likar} onChange={e => set('likar', e.target.value)} />
-              </div>
-              <div>
-                <Label className={lbl}>Зав. відділенням</Label>
-                <Input className={inp} value={formData.zavViddil} onChange={e => set('zavViddil', e.target.value)} />
-              </div>
+            <div><Label className={lbl}>Дата контролю гігієни порожнини рота</Label>
+              <Input className={inp} value={formData.kontrolGigieny} onChange={e => set('kontrolGigieny', e.target.value)} /></div>
+            <div className="border-t border-slate-100 pt-3 grid grid-cols-1 xs:grid-cols-2 gap-3">
+              <div><Label className={lbl}>Лікар (підпис)</Label>
+                <Input className={inp} value={formData.likar} onChange={e => set('likar', e.target.value)} /></div>
+              <div><Label className={lbl}>Зав. відділенням</Label>
+                <Input className={inp} value={formData.zavViddil} onChange={e => set('zavViddil', e.target.value)} /></div>
             </div>
           </TabsContent>
 
@@ -454,10 +464,19 @@ export function Form043Editor({ onClose }: Props) {
               {formData.journal.map((j, i) => (
                 <div key={i} className="flex gap-2 items-center">
                   <span className="text-[10px] text-slate-300 w-4 text-right shrink-0">{i+1}</span>
-                  <Input className="w-24 h-6 text-xs border-slate-200 shrink-0 px-1.5" placeholder="дд.мм.рр"
-                    value={j.date} onChange={e => setJournal(i,'date',e.target.value)} />
-                  <Input className="h-6 text-xs border-slate-200 flex-1 px-1.5" placeholder={`Запис ${i+1}`}
-                    value={j.note} onChange={e => setJournal(i,'note',e.target.value)} />
+                  <Input
+                    className="w-24 h-7 text-xs border-slate-200 shrink-0 px-1.5"
+                    placeholder="дд.мм.рр"
+                    inputMode="numeric"
+                    value={j.date}
+                    onChange={e => setJournal(i,'date',e.target.value)}
+                  />
+                  <Input
+                    className="h-7 text-xs border-slate-200 flex-1 px-1.5 min-w-0"
+                    placeholder={`Запис ${i+1}`}
+                    value={j.note}
+                    onChange={e => setJournal(i,'note',e.target.value)}
+                  />
                 </div>
               ))}
             </div>
@@ -465,12 +484,12 @@ export function Form043Editor({ onClose }: Props) {
 
           {/* ── Page 6: План ── */}
           <TabsContent value="p6" className="flex-1 overflow-y-auto p-4 mt-0">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
               <div>
                 <p className="text-[11px] uppercase tracking-wide font-medium text-teal-700 mb-2">План обстеження</p>
                 <div className="space-y-1">
                   {formData.planObstezhenny.map((v, i) => (
-                    <Input key={i} className="h-6 text-xs border-slate-200 px-2" value={v}
+                    <Input key={i} className="h-7 text-xs border-slate-200 px-2" value={v}
                       onChange={e => setPlan('planObstezhenny', i, e.target.value)} />
                   ))}
                 </div>
@@ -479,7 +498,7 @@ export function Form043Editor({ onClose }: Props) {
                 <p className="text-[11px] uppercase tracking-wide font-medium text-teal-700 mb-2">План лікування</p>
                 <div className="space-y-1">
                   {formData.planLikuvannya.map((v, i) => (
-                    <Input key={i} className="h-6 text-xs border-slate-200 px-2" value={v}
+                    <Input key={i} className="h-7 text-xs border-slate-200 px-2" value={v}
                       onChange={e => setPlan('planLikuvannya', i, e.target.value)} />
                   ))}
                 </div>
@@ -489,44 +508,16 @@ export function Form043Editor({ onClose }: Props) {
         </Tabs>
       </div>
 
-      {/* ── Right: preview ── */}
-      <div className="flex-1 flex flex-col bg-slate-200 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 bg-slate-800 text-white shrink-0">
-          <span className="text-sm font-medium">Перегляд — стор. {previewPage}</span>
-          <div className="flex gap-1 items-center">
-            <button onClick={() => setPreviewPage(p => Math.max(1,p-1))} disabled={previewPage===1}
-              className="p-1 rounded hover:bg-slate-700 disabled:opacity-30 transition-colors">
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            {[1,2,3,4,5,6].map(n => (
-              <button key={n} onClick={() => setPreviewPage(n)}
-                className={`w-7 h-7 text-xs rounded font-semibold transition-colors ${previewPage===n ? 'bg-teal-500 text-white' : 'text-slate-300 hover:bg-slate-700'}`}>
-                {n}
-              </button>
-            ))}
-            <button onClick={() => setPreviewPage(p => Math.min(6,p+1))} disabled={previewPage===6}
-              className="p-1 rounded hover:bg-slate-700 disabled:opacity-30 transition-colors">
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          <span className="text-[11px] text-slate-400">Оновлюється автоматично</span>
-        </div>
-
-        <div className="flex-1 overflow-auto p-4 flex justify-start items-start">
-          <iframe
-            ref={iframeRef}
-            className="bg-white shadow-2xl"
-style={{
-  width: '1262px',
-  height: '892px',
-  transform: 'scale(var(--preview-scale, 0.65))',
-  transformOrigin: 'top left',
-  marginBottom: '-303px',
-  marginRight: '-455px',
-}}
-            title="Форма 043"
-          />
-        </div>
+      {/* ── Preview panel ──
+          Desktop: always visible alongside form
+          Mobile:  full-screen overlay when showPreview === true
+      */}
+      <div className={`
+        flex-1 min-w-0
+        sm:flex
+        ${showPreview ? 'flex fixed inset-0 z-[60]' : 'hidden'}
+      `}>
+        <PreviewPanel />
       </div>
     </div>
   );
