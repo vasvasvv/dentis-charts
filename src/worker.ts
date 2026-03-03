@@ -149,12 +149,19 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 app.use(
   '*',
   cors({
-    origin: [
-      'https://dentis-charts.pages.dev',
-      'https://dentis-clinic.pp.ua',
-      'http://localhost:3000',
-      'http://localhost:5173',
-    ],
+    origin: (origin) => {
+      // Дозволяємо будь-який github.dev та localhost
+      if (!origin) return '*'
+      if (
+        origin.includes('.app.github.dev') ||
+        origin.includes('localhost') ||
+        origin === 'https://dentis-charts.pages.dev' ||
+        origin === 'https://dentis-clinic.pp.ua'
+      ) {
+        return origin
+      }
+      return null
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
