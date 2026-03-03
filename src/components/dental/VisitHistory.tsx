@@ -73,7 +73,7 @@ export function VisitHistory({ patientId }: VisitHistoryProps) {
             size="sm"
             aria-expanded={isExpanded}
             onClick={() => setIsExpanded(!isExpanded)}
-            className="h-9 w-9 p-0 flex items-center justify-center border rounded-md z-50 relative"
+            className="h-9 w-9 p-0 flex items-center justify-center border rounded-md"
           >
             {isExpanded ? (
               <ChevronUp className="w-5 h-5" />

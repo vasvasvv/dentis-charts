@@ -1,7 +1,7 @@
 // API Configuration
 const API_URLS = {
   production: 'https://dentis-cards-api.nesterenkovasil9.workers.dev',
-  development: 'http://localhost:8787',
+  development: '/proxy-api',
 } as const;
 
 const isDev = import.meta.env.DEV;
