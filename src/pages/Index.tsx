@@ -29,7 +29,7 @@ const Index = () => {
           className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-15"
           style={{ backgroundImage: `url(${bgImage})` }}
         />
-        <div className="relative min-h-screen flex flex-col bg-background/50 backdrop-blur-sm">
+        <div className="relative min-h-screen flex flex-col bg-background/30 backdrop-blur-sm">
           <main className="flex-1 flex flex-col p-2 overflow-hidden">
             {showChart && selectedPatientId ? (
               <>
