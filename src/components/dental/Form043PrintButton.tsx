@@ -24,7 +24,6 @@ export function Form043PrintButton({ className }: Form043PrintButtonProps) {
         <Printer className="w-4 h-4 mr-2" />
         Форма 043
       </Button>
-
       {open && <Form043Editor onClose={() => setOpen(false)} />}
     </>
   );
