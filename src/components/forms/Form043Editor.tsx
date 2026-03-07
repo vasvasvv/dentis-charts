@@ -60,14 +60,19 @@ function buildHTML(f: FormData, imgs: string[]): string {
       `$1${value}$2`
     );
   };
-  html = html.replace(/No_____/, `No${f.cardNumber}`);
+  html = html.replace(/№_____/, `№${f.cardNumber}`);
   html = html.replace(/_{4}р\./, `${f.year}р.`);
   fillCell(311, 772, f.fullName);
   fillCell(372, 378, f.gender);
   const dobLefts = [732, 771, 810, 849, 888, 927];
   const dobVals = [f.dobD1, f.dobD2 + '.', f.dobM1, f.dobM2 + '.', f.dobY1, f.dobY2 + '.'];
   dobLefts.forEach((left, i) => fillCell(372, left, dobVals[i]));
-  fillCell(399, 378, f.phone);
+  if (f.phone) {
+    html = html.replace(
+      '<p style="position:absolute;top:416px;left:138px;white-space:nowrap"',
+      `<p style="position:absolute;top:422px;left:380px;white-space:nowrap" class="ft17">${f.phone}</p>\n<p style="position:absolute;top:416px;left:138px;white-space:nowrap"`
+    );
+  }
   fillCell(485, 129, f.diagnoz);
   fillCell(546, 129, f.skargy);
   fillCell(607, 424, f.pereneseni);
@@ -101,8 +106,8 @@ function buildHTML(f: FormData, imgs: string[]): string {
     fillCell(tops5[i], 128, j.date);
     fillCell(tops5[i], 306, j.note);
   });
-  // Лікар — стор. 4 і стор. 5. У шаблоні пробіл між "Лікар" і підкресленнями — це &#160;
-  html = html.replace(/Лікар[\s\u00a0]*_{10,}/g, `Лікар ${f.likar}`);
+  // Лікар — стор. 4 і стор. 5. У шаблоні між "Лікар" і підкресленнями стоїть &#160; (HTML entity)
+  html = html.replace(/Лікар&#160;_{10,}/g, `Лікар&#160;${f.likar}`);
   const planTops = [141, 171, 201, 230, 260, 289, 319, 348, 378, 408, 437, 467, 496, 526, 556, 585, 615, 644, 674, 704, 733];
   f.planObstezhenny.slice(0, planTops.length).forEach((v, i) => fillCell(planTops[i], 129, v));
   f.planLikuvannya.slice(0, planTops.length).forEach((v, i) => fillCell(planTops[i], 662, v));
@@ -169,7 +174,22 @@ export function Form043Editor({ onClose }: Props) {
   }, []);
   const blobUrlRef = useRef<string | null>(null);
   const images = useBase64Images();
-  // Lock body scroll and scroll to top when the editor opens
+  // Lock body scroll when the editor opens, preserving current scroll position
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const body = document.body;
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    return () => {
+      body.style.overflow = '';
+      body.style.position = '';
+      body.style.top = '';
+      body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
 
   const updatePreview = useCallback(() => {
     if (!images) return;
@@ -260,7 +280,7 @@ export function Form043Editor({ onClose }: Props) {
     </div>
   );
   return (
-    <div className="fixed inset-0 z-50 flex bg-slate-900/80 backdrop-blur-sm">
+    <div className="fixed inset-x-0 z-40 flex h-full bg-slate-900/80 backdrop-blur-sm" style={{ top: '72px', bottom: '0px' }}>
       {/*
 Layout strategy:
 - Mobile (<sm): form fills full width; preview slides in as a full-screen overlay
@@ -268,7 +288,7 @@ Layout strategy:
 */}
       {/* ── Form panel ── */}
       <div className={`
-flex flex-col bg-white shadow-2xl overflow-hidden border-r border-slate-100 shrink-0
+flex flex-col bg-white shadow-2xl overflow-hidden border-r border-slate-100 shrink-0 h-full
 w-full sm:w-[440px]
 ${showPreview ? 'hidden sm:flex' : 'flex'}
 `}>
@@ -298,7 +318,7 @@ ${showPreview ? 'hidden sm:flex' : 'flex'}
           </div>
         </div>
         {/* Tabs */}
-        <Tabs defaultValue="p1" className="flex flex-col flex-1 overflow-hidden">
+        <Tabs defaultValue="p1" className="flex flex-col min-h-0 flex-1">
           {/* Scrollable tab bar on small screens */}
           <div className="overflow-x-auto shrink-0 border-b border-slate-100 bg-slate-50">
             <TabsList className="w-max min-w-full rounded-none bg-transparent h-9 px-2 justify-start gap-0.5">
@@ -311,7 +331,7 @@ ${showPreview ? 'hidden sm:flex' : 'flex'}
             </TabsList>
           </div>
           {/* ── Page 1 ── */}
-          <TabsContent value="p1" className="flex-1 overflow-y-auto p-4 space-y-3 mt-0">
+          <TabsContent value="p1" className="overflow-y-auto p-4 space-y-3 mt-0" style={{height:'calc(100vh - 72px - 56px - 36px)',overflowY:'auto'}}>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className={lbl}>Номер картки</Label>
                 <Input className={inp} value={formData.cardNumber} onChange={e => set('cardNumber', e.target.value)} /></div>
@@ -357,7 +377,7 @@ ${showPreview ? 'hidden sm:flex' : 'flex'}
               <Textarea className={ta} value={formData.rozvytok} onChange={e => set('rozvytok', e.target.value)} /></div>
           </TabsContent>
           {/* ── Page 2: Зубна карта ── */}
-          <TabsContent value="p2" className="flex-1 overflow-y-auto p-4 space-y-3 mt-0">
+          <TabsContent value="p2" className="overflow-y-auto p-4 space-y-3 mt-0" style={{height:'calc(100vh - 72px - 56px - 36px)',overflowY:'auto'}}>
             <div><Label className={lbl}>Дані об'єктивного дослідження / зовнішній огляд</Label>
               <Textarea className={ta} value={formData.daniOglyadu} onChange={e => set('daniOglyadu', e.target.value)} /></div>
             <div className="bg-teal-50 border border-teal-100 rounded-lg p-2 text-[10px] text-teal-800 leading-relaxed">
@@ -406,7 +426,7 @@ ${showPreview ? 'hidden sm:flex' : 'flex'}
               <Textarea className={ta} value={formData.toothNotes} onChange={e => set('toothNotes', e.target.value)} /></div>
           </TabsContent>
           {/* ── Page 3: Клінічний огляд ── */}
-          <TabsContent value="p3" className="flex-1 overflow-y-auto p-4 space-y-3 mt-0">
+          <TabsContent value="p3" className="overflow-y-auto p-4 space-y-3 mt-0" style={{height:'calc(100vh - 72px - 56px - 36px)',overflowY:'auto'}}>
             <div><Label className={lbl}>Прикус (тип)</Label>
               <Input className={inp} value={formData.prykus} onChange={e => set('prykus', e.target.value)} /></div>
             <div><Label className={lbl}>Стан гігієни, слизової, ясен, альвеолярних відростків. Індекси ГІ та РМА</Label>
@@ -421,16 +441,15 @@ ${showPreview ? 'hidden sm:flex' : 'flex'}
             </div>
             <div><Label className={lbl}>Дата контролю гігієни порожнини рота</Label>
               <Input className={inp} value={formData.kontrolGigieny} onChange={e => set('kontrolGigieny', e.target.value)} /></div>
-
-            <div className="border-t border-slate-100 pt-3 grid grid-cols-1 xs:grid-cols-2 gap-3">
+          </TabsContent>
+          {/* ── Pages 4+5: Щоденник ── */}
+          <TabsContent value="p4" className="overflow-y-auto p-4 mt-0" style={{height:'calc(100vh - 72px - 56px - 36px)',overflowY:'auto'}}>
+            <div className="border-b border-slate-100 pb-3 mb-3 grid grid-cols-1 xs:grid-cols-2 gap-3">
               <div><Label className={lbl}>Лікар (підпис)</Label>
                 <Input className={inp} value={formData.likar} onChange={e => set('likar', e.target.value)} /></div>
               <div><Label className={lbl}>Зав. відділенням</Label>
                 <Input className={inp} value={formData.zavViddil} onChange={e => set('zavViddil', e.target.value)} /></div>
             </div>
-          </TabsContent>
-          {/* ── Pages 4+5: Щоденник ── */}
-          <TabsContent value="p4" className="flex-1 overflow-y-auto p-4 mt-0">
             <p className="text-[11px] text-slate-400 mb-3 uppercase tracking-wide font-medium">Щоденник лікаря — стор. 4–5 (35 записів)</p>
             <div className="space-y-1.5">
               {formData.journal.map((j, i) => (
@@ -454,7 +473,7 @@ ${showPreview ? 'hidden sm:flex' : 'flex'}
             </div>
           </TabsContent>
           {/* ── Page 6: План ── */}
-          <TabsContent value="p6" className="flex-1 overflow-y-auto p-4 mt-0">
+          <TabsContent value="p6" className="overflow-y-auto p-4 mt-0" style={{height:'calc(100vh - 72px - 56px - 36px)',overflowY:'auto'}}>
             <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
               <div>
                 <p className="text-[11px] uppercase tracking-wide font-medium text-teal-700 mb-2">План обстеження</p>
@@ -486,8 +505,8 @@ Mobile: full-screen overlay when showPreview === true
       <div className={`
 flex-1 min-w-0
 sm:flex
-${showPreview ? 'flex fixed inset-0 z-[60]' : 'hidden'}
-`}>
+${showPreview ? 'flex fixed inset-x-0 z-[60]' : 'hidden'}
+`} style={showPreview ? { top: '72px', bottom: 0 } : undefined}>
         <PreviewPanel />
       </div>
     </div>
