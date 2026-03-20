@@ -22,7 +22,7 @@ interface ClinicContextType {
     getPatientsByDoctor: (doctorId: string) => Patient[];
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://dentis-cards-api.nesterenkovasil9.workers.dev';
+const API_URL = import.meta.env.VITE_API_URL || 'https://dentis-univ-api.nesterenkovasil9.workers.dev';
 
 const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
 
@@ -32,10 +32,10 @@ const ClinicContext = createContext<ClinicContextType | undefined>(undefined);
 function normalizeVisit(v: any): Visit {
     return {
         id: v.id?.toString() || '',
-        date: v.visitDate || v.date || '',
-        type: v.type === 'past' ? 'past' : 'future',
+        date: v.visit_at || v.visitDate || v.date || '',
+        type: (v.visit_type || v.type) === 'past' ? 'past' : 'future',
         notes: v.notes || v.reason || '',
-        doctorId: v.doctor_id?.toString() || v.doctorId?.toString() || '',
+        doctorId: v.doctor_user_id?.toString() || v.doctor_id?.toString() || v.doctorId?.toString() || '',
     };
 }
 
@@ -58,7 +58,12 @@ function normalizePatient(p: any): Patient {
     return {
         ...p,
         id: p.id?.toString() || '',
-        doctorId: p.doctor_id?.toString() || p.doctorId?.toString() || '',
+        firstName: p.firstName || p.first_name || '',
+        lastName: p.lastName || p.last_name || '',
+        middleName: p.middleName || p.middle_name || '',
+        dateOfBirth: p.dateOfBirth || p.date_of_birth || '',
+        phone: p.phone || '',
+        doctorId: p.primary_doctor_user_id?.toString() || p.doctor_id?.toString() || p.doctorId?.toString() || '',
         dentalChart: Array.isArray(p.dentalChart) ? p.dentalChart.map(normalizeTooth) : [],
         visits: Array.isArray(p.visits) ? p.visits.map(normalizeVisit) : [],
         changeHistory: Array.isArray(p.changeHistory) ? p.changeHistory : [],
@@ -215,14 +220,14 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
                     type: visit.type || 'future',
                     reason: visit.reason || null,
                     notes: visit.notes || null,
-                    doctorId: visit.doctorId || visit.doctor_id,
+                    doctorId: visit.doctorId || visit.doctor_id || selectedDoctorId,
                 })
             });
             await getPatients();
         } catch (error) {
             console.error('Add visit error:', error);
         }
-    }, [token, getPatients]);
+    }, [token, getPatients, selectedDoctorId]);
 
     const updateVisit = useCallback(async (patientId: string, visitId: string, visit: any) => {
         if (!token) return;
@@ -235,14 +240,14 @@ export function ClinicProvider({ children }: { children: React.ReactNode }) {
                     type: visit.type || 'future',
                     reason: visit.reason || null,
                     notes: visit.notes || null,
-                    doctorId: visit.doctorId || visit.doctor_id,
+                    doctorId: visit.doctorId || visit.doctor_id || selectedDoctorId,
                 })
             });
             await getPatients();
         } catch (error) {
             console.error('Update visit error:', error);
         }
-    }, [token, getPatients]);
+    }, [token, getPatients, selectedDoctorId]);
 
     const deleteVisit = useCallback(async (patientId: string, visitId: string) => {
         if (!token) return;
