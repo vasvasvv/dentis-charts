@@ -1,6 +1,6 @@
 // API Configuration
 const API_URLS = {
-  production: 'https://dentis-cards-api.nesterenkovasil9.workers.dev',
+  production: 'https://dentis-univ-api.nesterenkovasil9.workers.dev',
   development: '/proxy-api',
 } as const;
 
