@@ -25,6 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token]);
 
+  const normalizeRole = (role: string): UserRole => {
+    if (role === 'superuser' || role === 'superadmin') return 'super-admin';
+    if (role === 'manager' || role === 'admin') return 'admin';
+    return 'doctor';
+  };
+
   const login = useCallback(async (email: string, password: string) => {
     try {
       const data = await api.login(email, password);
@@ -37,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: data.user.id.toString(),
         username: data.user.email,
         name: data.user.fullName,
-        role: data.user.role as UserRole,
+        role: normalizeRole(data.user.role),
         createdAt: new Date().toISOString()
       };
 
